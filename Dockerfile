@@ -1,24 +1,18 @@
-# Use an official Python runtime as the base image
-FROM python:3.10-slim
+# Python image to use.
+FROM python:3.10
 
-# Install system dependencies required by psycopg and PostgreSQL
-RUN apt-get update && apt-get install -y \
-    libpq-dev gcc && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Set the working directory to /app
+WORKDIR /app
 
-    
-# Set the working directory inside the container
-WORKDIR /
-
-# Copy the requirements file and install dependencies
+# copy the requirements file used for dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code into the container
+# Install any needed packages specified in requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+
+# Copy the rest of the working directory contents into the container at /app
 COPY . .
 
-# Expose the port FastAPI will run on
-EXPOSE 8000
-
-# Command to run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run main.py when the container launches
+# CMD uvicorn main:app --host 0.0.0.0 --port $PORT
+ENTRYPOINT ["python3", "main.py"]

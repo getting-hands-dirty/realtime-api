@@ -86,14 +86,7 @@ async def handle_incoming_call(request: Request):
     response = VoiceResponse()
     # <Say> punctuation to improve text-to-speech flow
     response.say("""
-    Thank you for calling. 
-    For quality of service, this call may be recorded. 
-    To better assist you, please choose from the following options.
-    For services, press 1.
-    For sales, press 2.
-    For parts, press 3.
-    For the Collision Center, press 4.
-    For all other calls, please press 5.
+    Thank you for calling. For quality of service, this call may be recorded. 
     """)
     response.pause(length=1)
     host = request.url.hostname
@@ -284,5 +277,5 @@ async def initialize_session(openai_ws):
 
 if __name__ == "__main__":
     import uvicorn
-    server_port = int(os.environ.get('PORT', 8000))
+    server_port = int(os.environ.get('PORT', 8080))
     uvicorn.run("main:app", host="0.0.0.0", port=server_port, log_level="info")

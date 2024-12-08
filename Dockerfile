@@ -1,18 +1,20 @@
-# Python image to use.
-FROM python:3.10
+FROM python:3.12
 
-# Set the working directory to /app
-WORKDIR /app
+ENV PYTHONUNBUFFERED True
 
-# copy the requirements file used for dependencies
+# Combine update, install, and clean up
+RUN apt-get update && apt-get install -y build-essential libpq-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# First copy the requirements.txt and install Python dependencies
 COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
+# Set the application directory
 
-# Copy the rest of the working directory contents into the container at /app
+WORKDIR /
+
+# Copy the rest of the application
 COPY . .
 
-# Run main.py when the container launches
-# CMD uvicorn main:app --host 0.0.0.0 --port $PORT
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
 ENTRYPOINT ["python3", "main.py"]

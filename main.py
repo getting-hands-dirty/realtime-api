@@ -19,8 +19,8 @@ ssl_context.verify_mode = ssl.CERT_NONE
 load_dotenv()
 
 # Configuration
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-PORT = int(os.getenv('PORT', 5050))
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY','<OPENAI_API_KEY>')
+PORT = int(os.getenv('PORT', 8080))
 SYSTEM_MESSAGE = (
     """
     You are BMW of Fairfax sales team customer facing assistant. Always be polite and helpful and try to help the customer.
@@ -72,9 +72,6 @@ LOG_EVENT_TYPES = [
 SHOW_TIMING_MATH = False
 
 app = FastAPI()
-
-if not OPENAI_API_KEY:
-    raise ValueError('Missing the OpenAI API key. Please set it in the .env file.')
 
 @app.get("/", response_class=JSONResponse)
 async def index_page():
@@ -277,5 +274,4 @@ async def initialize_session(openai_ws):
 
 if __name__ == "__main__":
     import uvicorn
-    server_port = int(os.environ.get('PORT', 8080))
-    uvicorn.run("main:app", host="0.0.0.0", port=server_port, log_level="info")
+    uvicorn.run("main:app", host="0.0.0.0", port=PORT, log_level="info")

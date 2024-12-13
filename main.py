@@ -2,6 +2,10 @@ import os
 import json
 import base64
 import asyncio
+from config import REALTIIME_AUDIO_API_URL
+from prompts.common_settings import INTRO, SA_GREETING, SA_VOICE, LI_GREETING, LI_VOICE
+from prompts.automobile.sales_assistant import SYSTEM_INSTRUCTIONS as SA_SYSTEM_INSTRUCTIONS
+from prompts.interview.live_interviewer import SYSTEM_INSTRUCTIONS as LI_SYSTEM_INSTRUCTIONS
 import websockets
 from fastapi import FastAPI, WebSocket, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -21,48 +25,7 @@ load_dotenv()
 # Configuration
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 PORT = int(os.getenv('PORT', 8080))
-SYSTEM_MESSAGE = (
-    """
-    You are BMW of Fairfax sales team customer facing assistant. Always be polite and helpful and try to help the customer.
-    Attend to anything the user is interested in and is prepared to offer them facts. When responding take the CONTEXT belowinto consideration.
-    "CONTEXT: 
-        Business Information
-        Operating Hours
-        Sales Showroom Hours:
-        
-        Monday to Friday: 9:00 AM - 7:30 PM
-        Saturday: 9:00 AM - 6:00 PM
-        Closed on Sundays.
-       
-        Service Center Hours:
-        Monday to Friday: 7:00 AM - 6:00 PM
-        Saturday: 8:00 AM - 4:00 PM
-        Closed on Sundays.
 
-        Service Center Location
-        The service facility and body shop are located on Lee Highway Route 29, approximately 200 yards from the new car showroom.
-        The service facility is recessed 100 yards and may be difficult to see from the road.
-        
-        Company Overview:
-        BMW of Fairfax specializes in offering new and pre-owned BMW vehicles, along with certified pre-owned options that meet rigorous inspection standards. The dealership also provides financing options, leasing, and a variety of maintenance and repair services through its Service Center and Body Shop.
-
-        Core Values:
-
-        Exceptional customer service.
-        Transparency in vehicle sales and services.
-        Commitment to delivering quality and reliability.
-        Special Features:
-
-        On-site financing and lease programs tailored to individual needs.
-        Access to BMW-certified technicians and genuine BMW parts for repairs.
-        Customer loyalty programs for service and maintenance discounts.
-        Customer Support Approach:
-
-        Ensuring every customer inquiry is met with comprehensive and clear responses.
-        Providing convenient and reliable assistance for both sales and service-related questions
-        """
-)
-VOICE = 'coral'
 LOG_EVENT_TYPES = [
     'error', 'response.content.done', 'rate_limits.updated',
     'response.done', 'input_audio_buffer.committed',
@@ -80,30 +43,38 @@ if not OPENAI_API_KEY:
 async def index_page():
     return {"message": "Twilio Media Stream Server is running!"}
 
-@app.api_route("/incoming-call", methods=["GET", "POST"])
-async def handle_incoming_call(request: Request):
+@app.api_route("/incoming-call/{type}", methods=["GET", "POST"])
+async def handle_incoming_call(request: Request, type: str):
     """Handle incoming call and return TwiML response to connect to Media Stream."""
     response = VoiceResponse()
     # <Say> punctuation to improve text-to-speech flow
-    response.say("""
-    Thank you for calling. For quality of service, this call may be recorded. 
-    """)
+    response.say(INTRO)
     response.pause(length=1)
     host = request.url.hostname
     connect = Connect()
-    connect.stream(url=f'wss://{host}/media-stream')
+    connect.stream(url=f'wss://{host}/media-stream/{type}')
     response.append(connect)
     return HTMLResponse(content=str(response), media_type="application/xml")
 
-@app.websocket("/media-stream")
-async def handle_media_stream(websocket: WebSocket):
+@app.websocket("/media-stream/{type}")
+async def handle_media_stream(websocket: WebSocket, type: str):
     """Handle WebSocket connections between Twilio and OpenAI."""
     try:
         print("Client connected")
+
+        if type=='automobile-assistant':
+            instructions = SA_SYSTEM_INSTRUCTIONS
+            welcome_message = SA_GREETING
+            voice = SA_VOICE
+        elif type == 'live-interviewer':
+            instructions = LI_SYSTEM_INSTRUCTIONS
+            welcome_message = LI_GREETING
+            voice = LI_VOICE
+        
         await websocket.accept()
 
         async with websockets.connect(
-            'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01',
+            REALTIIME_AUDIO_API_URL,
             extra_headers={
                 "Authorization": f"Bearer {OPENAI_API_KEY}",
                 "OpenAI-Beta": "realtime=v1"
@@ -111,7 +82,7 @@ async def handle_media_stream(websocket: WebSocket):
             ssl=ssl_context
 
         ) as openai_ws:
-            await initialize_session(openai_ws)
+            await initialize_session(openai_ws, instructions, welcome_message, voice)
 
             # Connection specific state
             stream_sid = None
@@ -236,7 +207,7 @@ async def handle_media_stream(websocket: WebSocket):
     finally:
         await websocket.close()
     
-async def send_initial_conversation_item(openai_ws):
+async def send_initial_conversation_item(openai_ws, welcome_message):
     """Send initial conversation item if AI talks first."""
     initial_conversation_item = {
         "type": "conversation.item.create",
@@ -246,7 +217,7 @@ async def send_initial_conversation_item(openai_ws):
             "content": [
                 {
                     "type": "input_text",
-                    "text": "Greet the user with 'Hello, this is the BMW of Fairfax Sales Team Assistant! How can I help you?'"
+                    "text": welcome_message
                 }
             ]
         }
@@ -255,7 +226,7 @@ async def send_initial_conversation_item(openai_ws):
     await openai_ws.send(json.dumps({"type": "response.create"}))
 
 
-async def initialize_session(openai_ws):
+async def initialize_session(openai_ws, instructions, welcome_message, voice):
     """Control initial session with OpenAI."""
     session_update = {
         "type": "session.update",
@@ -263,8 +234,8 @@ async def initialize_session(openai_ws):
             "turn_detection": {"type": "server_vad"},
             "input_audio_format": "g711_ulaw",
             "output_audio_format": "g711_ulaw",
-            "voice": VOICE,
-            "instructions": SYSTEM_MESSAGE,
+            "voice": voice,
+            "instructions": instructions,
             "modalities": ["text","audio"],
             "temperature": 0.8,
         }
@@ -273,7 +244,7 @@ async def initialize_session(openai_ws):
     await openai_ws.send(json.dumps(session_update))
 
     # Uncomment the next line to have the AI speak first
-    await send_initial_conversation_item(openai_ws)
+    await send_initial_conversation_item(openai_ws, welcome_message)
 
 if __name__ == "__main__":
     import uvicorn

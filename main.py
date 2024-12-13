@@ -3,9 +3,6 @@ import json
 import base64
 import asyncio
 from config import REALTIIME_AUDIO_API_URL
-from prompts.common_settings import INTRO, SA_GREETING, SA_VOICE, LI_GREETING, LI_VOICE
-from prompts.automobile.sales_assistant import SYSTEM_INSTRUCTIONS as SA_SYSTEM_INSTRUCTIONS
-from prompts.interview.live_interviewer import SYSTEM_INSTRUCTIONS as LI_SYSTEM_INSTRUCTIONS
 import websockets
 from fastapi import FastAPI, WebSocket, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -13,6 +10,9 @@ from fastapi.websockets import WebSocketDisconnect
 from twilio.twiml.voice_response import VoiceResponse, Connect, Say, Stream
 from dotenv import load_dotenv
 import ssl
+
+import importlib
+
 
 # Create an SSL context (for development purposes only)
 ssl_context = ssl.create_default_context()
@@ -34,19 +34,27 @@ LOG_EVENT_TYPES = [
 ]
 SHOW_TIMING_MATH = False
 
+INSTRUCTIONS = ""
+GREETING_TEXT = ""
+VOICE = ""
+INTRO = ""
+ADVANCED_SETTINGS = {}
 app = FastAPI()
+
 
 if not OPENAI_API_KEY:
     raise ValueError('Missing the OpenAI API key. Please set it in the .env file.')
 
 @app.get("/", response_class=JSONResponse)
 async def index_page():
-    return {"message": "Twilio Media Stream Server is running!"}
+    load_usecase_metadata("interview")
+    return {"message": INTRO}
 
 @app.api_route("/incoming-call/{type}", methods=["GET", "POST"])
 async def handle_incoming_call(request: Request, type: str):
     """Handle incoming call and return TwiML response to connect to Media Stream."""
     response = VoiceResponse()
+    load_usecase_metadata(type)
     # <Say> punctuation to improve text-to-speech flow
     response.say(INTRO)
     response.pause(length=1)
@@ -62,15 +70,6 @@ async def handle_media_stream(websocket: WebSocket, type: str):
     try:
         print("Client connected")
 
-        if type=='automobile-assistant':
-            instructions = SA_SYSTEM_INSTRUCTIONS
-            welcome_message = SA_GREETING
-            voice = SA_VOICE
-        elif type == 'live-interviewer':
-            instructions = LI_SYSTEM_INSTRUCTIONS
-            welcome_message = LI_GREETING
-            voice = LI_VOICE
-        
         await websocket.accept()
 
         async with websockets.connect(
@@ -82,7 +81,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
             ssl=ssl_context
 
         ) as openai_ws:
-            await initialize_session(openai_ws, instructions, welcome_message, voice)
+            await initialize_session(openai_ws)
 
             # Connection specific state
             stream_sid = None
@@ -206,8 +205,25 @@ async def handle_media_stream(websocket: WebSocket, type: str):
         print(f"Unexpected error in media stream: {e}")
     finally:
         await websocket.close()
+
+def load_usecase_metadata(type: str):
+    module_name = f'usecases.{type}.config'
+    module = importlib.import_module(module_name)
+
+    global INTRO
+    global INSTRUCTIONS
+    global GREETING_TEXT
+    global VOICE
+    global ADVANCED_SETTINGS
+
+    INTRO = module.INTRO_TEXT
+    INSTRUCTIONS = module.SYSTEM_INSTRUCTIONS
+    GREETING_TEXT =  module.GREETING_TEXT
+    VOICE = module.VOICE
+    ADVANCED_SETTINGS = module.ADVANCED_SETTINGS
     
-async def send_initial_conversation_item(openai_ws, welcome_message):
+     
+async def send_initial_conversation_item(openai_ws, greeting_text):
     """Send initial conversation item if AI talks first."""
     initial_conversation_item = {
         "type": "conversation.item.create",
@@ -217,7 +233,7 @@ async def send_initial_conversation_item(openai_ws, welcome_message):
             "content": [
                 {
                     "type": "input_text",
-                    "text": welcome_message
+                    "text": greeting_text
                 }
             ]
         }
@@ -226,25 +242,25 @@ async def send_initial_conversation_item(openai_ws, welcome_message):
     await openai_ws.send(json.dumps({"type": "response.create"}))
 
 
-async def initialize_session(openai_ws, instructions, welcome_message, voice):
+async def initialize_session(openai_ws):
     """Control initial session with OpenAI."""
     session_update = {
         "type": "session.update",
         "session": {
-            "turn_detection": {"type": "server_vad"},
-            "input_audio_format": "g711_ulaw",
-            "output_audio_format": "g711_ulaw",
-            "voice": voice,
-            "instructions": instructions,
-            "modalities": ["text","audio"],
-            "temperature": 0.8,
+            "turn_detection": ADVANCED_SETTINGS["turn_detection"] or {"type": "server_vad"},
+            "input_audio_format": ADVANCED_SETTINGS["input_audio_format"] or "g711_ulaw",
+            "output_audio_format":ADVANCED_SETTINGS["output_audio_format"] or "g711_ulaw",
+            "voice": VOICE, 
+            "instructions": INSTRUCTIONS,
+            "modalities": ADVANCED_SETTINGS["modalities"] or ["text","audio"],
+            "temperature": ADVANCED_SETTINGS["temperature"] or 0.8,
         }
     }
     print('Sending session update:', json.dumps(session_update))
     await openai_ws.send(json.dumps(session_update))
 
     # Uncomment the next line to have the AI speak first
-    await send_initial_conversation_item(openai_ws, welcome_message)
+    await send_initial_conversation_item(openai_ws, GREETING_TEXT)
 
 if __name__ == "__main__":
     import uvicorn

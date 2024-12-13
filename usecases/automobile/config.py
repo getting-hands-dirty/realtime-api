@@ -1,5 +1,29 @@
-SYSTEM_INSTRUCTIONS = (
+from .prompt_variables import *
+
+# The voice the model uses to respond. Current voice options are ash, ballad, coral, sage, and verse.
+# Also supported but not recommended are alloy, echo, and shimmer. These older voices are less expressive.
+# Voice cannot be changed during the session once the model has responded with audio at least once.
+VOICE = 'coral'
+
+# Don't change below values, unless it's required and you have the expertise on doing that. 
+ADVANCED_SETTINGS = { 
+    "turn_detection": {"type": "server_vad"},
+    "input_audio_format": "g711_ulaw",
+    "output_audio_format": "g711_ulaw",
+    "modalities": ["text","audio"],
+    "temperature": 0.8,
+}
+
+# Entry message spoken out to the end user by Twilio.
+INTRO_TEXT = """
+    Thank you for calling. For quality of service, this call may be recorded. 
     """
+
+# Greeting message spoken out to the end user by AI setup. 
+GREETING_TEXT = """Greet the user with 'Hello, this is the BMW of Fairfax Sales Team Assistant! How can I help you?'"""
+
+# Main instruction prompt.
+SYSTEM_INSTRUCTIONS = f"""
     You are BMW of Fairfax sales team customer facing assistant. Always be polite and helpful and try to help the customer.
     Attend to anything the user is interested in and is prepared to offer them facts. When responding take the CONTEXT belowinto consideration.
     "CONTEXT: 
@@ -38,4 +62,3 @@ SYSTEM_INSTRUCTIONS = (
         Ensuring every customer inquiry is met with comprehensive and clear responses.
         Providing convenient and reliable assistance for both sales and service-related questions
         """
-)

@@ -14,11 +14,11 @@ ADVANCED_SETTINGS = {
 
 # Entry message spoken out to the end user.
 INTRO_TEXT = """
-    Welcome to DevLog. Reviewing your tasks and progress.
+    Welcome to Developer worklog review. Reviewing your tasks and progress.
     """
 
 # Greeting message spoken out to the end user by AI setup.
-GREETING_TEXT = """Hello! I'm DevLog, your task reviewer and assistant."""
+GREETING_TEXT = """Greet the user with 'Hello! I'm DevLog, your task reviewer and assistant.'"""
 
 # Main instruction prompt.
 SYSTEM_INSTRUCTIONS = f"""

@@ -8,7 +8,7 @@ ADVANCED_SETTINGS = {
     "turn_detection": {"type": "server_vad"},
     "input_audio_format": "g711_ulaw",
     "output_audio_format": "g711_ulaw",
-    "modalities": ["text"],
+    "modalities": ["text","audio"],
     "temperature": 0.8,
 }
 

@@ -1,29 +1,5 @@
 tasks = [
     {
-        "taskId": "RD101",
-        "title": "Refactor image cropping component",
-        "description": "Update React component to support dual cropping functionality using react-easy-crop.",
-        "status": "Completed",
-        "start_date": "2024-12-10",
-        "end_date": "2024-12-12",
-    },
-    {
-        "taskId": "RD102",
-        "title": "Analyze hex-formatted stream lengths",
-        "description": "Perform calculations for hex formatting in pixel streams, ensuring correct stream length processing.",
-        "status": "Completed",
-        "start_date": "2024-12-13",
-        "end_date": "2024-12-14",
-    },
-    {
-        "taskId": "RD103",
-        "title": "Develop smart contract for NFT lifecycle tracking",
-        "description": "Design and implement an NFT standard for tracking the lifecycle of gems, including linking previous states.",
-        "status": "In Progress",
-        "start_date": "2024-12-15",
-        "end_date": None,
-    },
-    {
         "taskId": "RD104",
         "title": "Prepare interview AI prompt",
         "description": "Draft detailed configuration for an AI interviewer to assess candidates for technical roles.",
@@ -55,4 +31,28 @@ tasks = [
         "start_date": None,
         "end_date": None,
     },
+    {
+        "taskId": "RD101",
+        "title": "Refactor image cropping component",
+        "description": "Update React component to support dual cropping functionality using react-easy-crop.",
+        "status": "Completed",
+        "start_date": "2024-12-10",
+        "end_date": "2024-12-12",
+    },
+    {
+        "taskId": "RD102",
+        "title": "Analyze hex-formatted stream lengths",
+        "description": "Perform calculations for hex formatting in pixel streams, ensuring correct stream length processing.",
+        "status": "Completed",
+        "start_date": "2024-12-13",
+        "end_date": "2024-12-14",
+    },
+    {
+        "taskId": "RD103",
+        "title": "Develop smart contract for NFT lifecycle tracking",
+        "description": "Design and implement an NFT standard.",
+        "status": "In Progress",
+        "start_date": "2024-12-15",
+        "end_date": None,
+    }
 ]

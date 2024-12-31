@@ -56,8 +56,9 @@ async def handle_incoming_call(request: Request, type: str):
     response = VoiceResponse()
     load_usecase_metadata(type)
     # <Say> punctuation to improve text-to-speech flow
-    response.say(INTRO)
-    response.pause(length=1)
+    if INTRO:
+        response.say(INTRO)
+        response.pause(length=1)
     host = request.url.hostname
     connect = Connect()
     connect.stream(url=f'wss://{host}/media-stream/{type}')

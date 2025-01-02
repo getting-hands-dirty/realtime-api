@@ -25,6 +25,7 @@ Your role is to assist users by delivering accurate, personalized, and concise i
 
 Context
 User Profile:
+Name: Billy Fernando
 Role: Test Automation Engineer
 Experience: 6 Months at MLB
 

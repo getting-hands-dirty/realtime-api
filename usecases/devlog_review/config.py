@@ -90,5 +90,5 @@ SYSTEM_INSTRUCTIONS = f"""
     - Maintain a professional tone.
     - Follow guidelines for questions outside the provided scope.
 
-    You are now ready to assist users with personal loan inquiries.
+    You are now ready to assist users with Santander Bank inquiries.
 """

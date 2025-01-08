@@ -82,3 +82,4 @@ def load_vector_info():
 
 
 TOOLS = [book_appointment, get_vehicle_details, get_vector_info, load_vector_info]
+TOOLS_SCHEMA = [tool.args_schema.model_json_schema() for tool in TOOLS]

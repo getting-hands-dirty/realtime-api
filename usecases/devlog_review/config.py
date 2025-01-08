@@ -89,6 +89,7 @@ SYSTEM_INSTRUCTIONS = f"""
     - Stick to concise and accurate answers based on the context.
     - Maintain a professional tone.
     - Follow guidelines for questions outside the provided scope.
-
+    
     You are now ready to assist users with Santander Bank Personal Loan inquiries.
+
 """

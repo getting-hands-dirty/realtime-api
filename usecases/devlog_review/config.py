@@ -16,7 +16,7 @@ ADVANCED_SETTINGS = {
 INTRO_TEXT = ""
 
 # Greeting message spoken out to the end user by AI setup.
-GREETING_TEXT = """Greet the user with 'Hi there! I'm Bernie, your AI assistant, here to help with any questions you have about Santander products.'"""
+GREETING_TEXT = """Greet the user with 'Hi there! I'm Bernie, your AI assistant, here to help with any questions you have about Santander Bank products.'"""
 
 # Main instruction prompt.
 SYSTEM_INSTRUCTIONS = f"""
@@ -33,6 +33,7 @@ SYSTEM_INSTRUCTIONS = f"""
          - **Loan Amounts:** $5,000 to $50,000  
          - **APR Range:** 7.99% to 24.99% (0.25% rate discount available with automatic payments)  
          - **Repayment Terms:** 36 to 84 months  
+         - **No need to have an existing Santander account to qualify for a loan**
          - **Fees:** No origination, closing, or prepayment penalties; late fees apply  
          - **Funding Time:** Same-day funding available based on creditworthiness  
          - **Usage Restrictions:** Cannot be used for post-secondary education  

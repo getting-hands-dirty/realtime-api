@@ -82,8 +82,31 @@ def load_vector_info():
 
 
 TOOLS = [get_vehicle_details, get_vector_info]
-TOOLS_SCHEMA = [
-    {**tool, "name": tool.pop("title")} if "title" in tool else tool
-    for tool in [tool.args_schema.model_json_schema() for tool in TOOLS]
-]
+# TOOLS_SCHEMA = [
+#     {**tool, "name": tool.pop("title")} if "title" in tool else tool
+#     for tool in [tool.args_schema.model_json_schema() for tool in TOOLS]
+# ]
 # print(TOOLS_SCHEMA)
+
+TOOLS_SCHEMA = [
+    {
+        "type": "function",
+        "name": "get_vehicle_details",
+        "description": "Retrieve details of a vehicle by its ID.\n\nArgs:\n    vehicle_id (str): The ID of the vehicle.\n\nReturns:\n    dict: Response from the API.",
+        "parameters": {
+            "type": "object",
+            "properties": {"vehicle_id": {"type": "string"}},
+            "required": ["vehicle_id"],
+        },
+    },
+    {
+        "type": "function",
+        "name": "get_vector_info",
+        "description": "Query the information from the database on general questions.\n\nArgs:\n    query (str): The query text.\n\nReturns:\n    dict: Response from the API.",
+        "parameters": {
+            "type": "object",
+            "properties": {"query": {"type": "string"}},
+            "required": ["query"],
+        },
+    },
+]

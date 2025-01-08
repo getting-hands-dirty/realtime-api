@@ -261,7 +261,6 @@ async def send_initial_conversation_item(openai_ws, greeting_text):
 
 async def initialize_session(openai_ws):
     """Control initial session with OpenAI."""
-    print(TOOLS)
     session_update = {
         "type": "session.update",
         "session": {

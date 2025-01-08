@@ -1,6 +1,6 @@
 from .tools import *
 
-VOICE = "sage"
+VOICE = "ash"
 
 ADVANCED_SETTINGS = {
     "turn_detection": {"type": "server_vad"},

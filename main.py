@@ -13,6 +13,8 @@ import ssl
 
 import importlib
 
+from usecases.maintenance.tools import get_vector_info, get_vehicle_details
+
 
 # Create an SSL context (for development purposes only)
 ssl_context = ssl.create_default_context()
@@ -160,6 +162,74 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                 last_assistant_item = response["item_id"]
 
                             await send_mark(websocket, stream_sid)
+
+                        if (
+                            response.get("type")
+                            == "response.function_call_arguments.done"
+                        ):
+                            try:
+                                function_name = response.get("name")
+                                args = json.loads(response.get("arguments", "{}"))
+                                result = ""
+
+                                if function_name == "get_vehicle_details":
+                                    vehicle_id = args.get("vehicle_id")
+                                    result = get_vehicle_details(
+                                        tool_input={"vehicle_id": vehicle_id}
+                                    )
+
+                                if function_name == "get_vector_info":
+                                    question = args.get("query")
+                                    result = get_vector_info(
+                                        tool_input={"query": question}
+                                    )
+
+                                print(
+                                    f"Received function call: {function_name} with args: {args}, {result}"
+                                )
+
+                                # Send the streamed response as OpenAI response
+                                function_output_event = {
+                                    "type": "conversation.item.create",
+                                    "item": {
+                                        "type": "function_call_output",
+                                        "role": "system",
+                                        "output": result,
+                                    },
+                                }
+
+                                # Send the function call output (answer from Pinecone)
+                                await openai_ws.send(json.dumps(function_output_event))
+
+                                # Send the response to OpenAI to create a reply
+                                await openai_ws.send(
+                                    json.dumps(
+                                        {
+                                            "type": "response.create",
+                                            "response": {
+                                                "modalities": ["text", "audio"],
+                                                "instructions": f'Respond to the user\'s question "{question}" based on this information: {result}. Be concise and friendly.',
+                                            },
+                                        }
+                                    )
+                                )
+
+                            except Exception as e:
+                                print(
+                                    "Error processing question via Pinecone Assistant:",
+                                    e,
+                                )
+                                await openai_ws.send(
+                                    json.dumps(
+                                        {
+                                            "type": "response.create",
+                                            "response": {
+                                                "modalities": ["text", "audio"],
+                                                "instructions": "I apologize, but I'm having trouble processing your request right now. Is there anything else I can help you with?",
+                                            },
+                                        }
+                                    )
+                                )
 
                         # Trigger an interruption. Your use case might work better using `input_audio_buffer.speech_stopped`, or combining the two.
                         if response.get("type") == "input_audio_buffer.speech_started":

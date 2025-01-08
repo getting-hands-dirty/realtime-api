@@ -3,7 +3,7 @@ from langchain_core.tools import tool
 
 import requests
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "https://mock-api-realtime-938786674786.us-central1.run.app"
 
 
 @tool
@@ -63,7 +63,7 @@ def get_vector_info(query: str):
         dict: Response from the API.
     """
     url = f"{BASE_URL}/vector-info"
-    params = {"query": query}
+    params = {"query": query, filter: {"customer_id": "C126"}}
     response = requests.post(url, params=params)
     return response.json()
 
@@ -81,5 +81,9 @@ def load_vector_info():
     return response.json()
 
 
-TOOLS = [book_appointment, get_vehicle_details, get_vector_info, load_vector_info]
-TOOLS_SCHEMA = [tool.args_schema.model_json_schema() for tool in TOOLS]
+TOOLS = [get_vehicle_details, get_vector_info]
+TOOLS_SCHEMA = [
+    {**tool, "name": tool.pop("title")} if "title" in tool else tool
+    for tool in [tool.args_schema.model_json_schema() for tool in TOOLS]
+]
+# print(TOOLS_SCHEMA)

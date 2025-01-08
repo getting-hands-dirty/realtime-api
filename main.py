@@ -13,8 +13,6 @@ import ssl
 
 import importlib
 
-from usecases.maintenance.tools import TOOLS_SCHEMA
-
 
 # Create an SSL context (for development purposes only)
 ssl_context = ssl.create_default_context()
@@ -45,6 +43,7 @@ GREETING_TEXT = ""
 VOICE = ""
 INTRO = ""
 ADVANCED_SETTINGS = {}
+TOOLS_SCHEMA = []
 app = FastAPI()
 
 
@@ -54,7 +53,7 @@ if not OPENAI_API_KEY:
 
 @app.get("/", response_class=JSONResponse)
 async def index_page():
-    load_usecase_metadata("interview")
+    load_usecase_metadata("maintenance")
     return {"message": INTRO}
 
 
@@ -237,12 +236,14 @@ def load_usecase_metadata(type: str):
     global GREETING_TEXT
     global VOICE
     global ADVANCED_SETTINGS
+    global TOOLS_SCHEMA
 
     INTRO = module.INTRO_TEXT
     INSTRUCTIONS = module.SYSTEM_INSTRUCTIONS
     GREETING_TEXT = module.GREETING_TEXT
     VOICE = module.VOICE
     ADVANCED_SETTINGS = module.ADVANCED_SETTINGS
+    TOOLS_SCHEMA = module.TOOLS_SCHEMA
 
 
 async def send_initial_conversation_item(openai_ws, greeting_text):

@@ -1,3 +1,5 @@
+from .tools import *
+
 VOICE = "sage"
 
 ADVANCED_SETTINGS = {

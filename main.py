@@ -35,6 +35,7 @@ LOG_EVENT_TYPES = [
     "input_audio_buffer.speech_stopped",
     "input_audio_buffer.speech_started",
     "session.created",
+    "response.function_call_arguments.done",
 ]
 SHOW_TIMING_MATH = False
 
@@ -181,12 +182,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                 )
 
                                 if tool_to_invoke:
-                                    if function_name == "get_vehicle_details":
-                                        vehicle_id = args.get("vehicle_id")
-                                        result = tool_to_invoke(vehicle_id=vehicle_id)
-                                    if function_name == "get_vector_info":
-                                        query = args.get("query")
-                                        result = tool_to_invoke(query=query)
+                                    result = tool_to_invoke(**args)
                                 else:
                                     print(
                                         f"Tool '{function_name}' not found in TOOLS array."

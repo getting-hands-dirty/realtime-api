@@ -17,6 +17,7 @@ def book_appointment(
     Customer ID, Vehicle ID, Date, Time, and Service.
     """
     url = f"{BASE_URL}/book-appointment"
+    headers = {"Content-Type": "application/json"}
     payload = {
         "customer_id": customer_id,
         "vehicle_id": vehicle_id,
@@ -24,8 +25,8 @@ def book_appointment(
         "time": time,
         "service": service,
     }
-    response = requests.post(url, json=payload)
-    return response.json()
+    response = requests.post(url, json=payload, headers=headers)
+    return response.text
 
 
 @tool
@@ -35,7 +36,7 @@ def get_vehicle_details(vehicle_id: str):
     """
     url = f"{BASE_URL}/vehicle/{vehicle_id}"
     response = requests.get(url)
-    return response.json()
+    return response.text
 
 
 @tool
@@ -44,9 +45,14 @@ def get_vector_info(query: str):
     Query the knowledge base for general information, such as customer details, maintenance details and any other information.
     """
     url = f"{BASE_URL}/vector-info"
-    params = {"query": query, filter: {"topic": "maintenance"}}
-    response = requests.post(url, params=params)
-    return response.json()
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "query": query,
+        "filter": {"topic": "maintenance"},
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+    return response.text
 
 
 TOOLS = [get_vehicle_details, get_vector_info, book_appointment]

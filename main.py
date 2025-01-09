@@ -168,28 +168,45 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                             == "response.function_call_arguments.done"
                         ):
                             try:
+                                call_id = response.get("call_id")
                                 function_name = response.get("name")
                                 args = json.loads(response.get("arguments", "{}"))
                                 result = ""
 
-                                tool_to_invoke = next(
-                                    (
-                                        tool
-                                        for tool in TOOLS
-                                        if tool.__name__ == function_name
-                                    ),
-                                    None,
-                                )
-
-                                if tool_to_invoke:
-                                    result = tool_to_invoke(**args)
-                                else:
-                                    print(
-                                        f"Tool '{function_name}' not found in TOOLS array."
+                                if function_name == "get_vehicle_details":
+                                    from usecases.maintenance.tools import (
+                                        get_vehicle_details,
                                     )
 
+                                    vehicle_id = args.get("vehicle_id")
+                                    result = get_vehicle_details(vehicle_id=vehicle_id)
+
+                                if function_name == "book_appointment":
+                                    from usecases.maintenance.tools import (
+                                        get_vector_info,
+                                    )
+
+                                    query = args.get("query")
+                                    result = get_vector_info(query=query)
+
+                                # tool_to_invoke = next(
+                                #     (
+                                #         tool
+                                #         for tool in TOOLS
+                                #         if tool.__name__ == function_name
+                                #     ),
+                                #     None,
+                                # )
+
+                                # if tool_to_invoke:
+                                #     result = tool_to_invoke(**args)
+                                # else:
+                                #     print(
+                                #         f"Tool '{function_name}' not found in TOOLS array."
+                                #     )
+
                                 print(
-                                    f"Received function call: {function_name} with args: {args}, {result}"
+                                    f"Received function call: {function_name} | {call_id} with args: {args}, {result}"
                                 )
 
                                 # Send the streamed response as OpenAI response
@@ -197,6 +214,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     "type": "conversation.item.create",
                                     "item": {
                                         "type": "function_call_output",
+                                        "call_id": call_id,
                                         "role": "system",
                                         "output": result,
                                     },

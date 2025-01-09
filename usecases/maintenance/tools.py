@@ -1,12 +1,11 @@
-from langchain_core.tools import tool
-
-
 import requests
+import os
 
-BASE_URL = "https://mock-api-realtime-938786674786.us-central1.run.app"
+BASE_URL = os.getenv(
+    "TOOLS_API_URL", "https://mock-api-realtime-938786674786.us-central1.run.app"
+)
 
 
-@tool
 def book_appointment(
     customer_id: str, vehicle_id: str, date: str, time: str, service: str
 ):
@@ -35,7 +34,6 @@ def book_appointment(
     return response.json()
 
 
-@tool
 def get_vehicle_details(vehicle_id: str):
     """
     Retrieve details of a vehicle by its ID.
@@ -51,7 +49,6 @@ def get_vehicle_details(vehicle_id: str):
     return response.json()
 
 
-@tool
 def get_vector_info(query: str):
     """
     Query the vector information from the vector database.
@@ -68,7 +65,6 @@ def get_vector_info(query: str):
     return response.json()
 
 
-@tool
 def load_vector_info():
     """
     Load the vector information from the vector database.

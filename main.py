@@ -181,13 +181,32 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     vehicle_id = args.get("vehicle_id")
                                     result = get_vehicle_details(vehicle_id=vehicle_id)
 
-                                if function_name == "book_appointment":
+                                if function_name == "get_vector_info":
                                     from usecases.maintenance.tools import (
                                         get_vector_info,
                                     )
 
                                     query = args.get("query")
                                     result = get_vector_info(query=query)
+
+                                if function_name == "book_appointment":
+                                    from usecases.maintenance.tools import (
+                                        book_appointment,
+                                    )
+
+                                    customer_id = args.get("customer_id")
+                                    vehicle_id = args.get("vehicle_id")
+                                    date = args.get("date")
+                                    time = args.get("time")
+                                    service = args.get("service")
+
+                                    result = book_appointment(
+                                        customer_id=customer_id,
+                                        vehicle_id=vehicle_id,
+                                        date=date,
+                                        time=time,
+                                        service=service,
+                                    )
 
                                 # tool_to_invoke = next(
                                 #     (

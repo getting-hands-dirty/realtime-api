@@ -13,8 +13,6 @@ import ssl
 
 import importlib
 
-from usecases.maintenance.tools import get_vector_info, get_vehicle_details
-
 
 # Create an SSL context (for development purposes only)
 ssl_context = ssl.create_default_context()
@@ -46,6 +44,7 @@ VOICE = ""
 INTRO = ""
 ADVANCED_SETTINGS = {}
 TOOLS_SCHEMA = []
+TOOLS = []
 app = FastAPI()
 
 
@@ -172,16 +171,25 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                 args = json.loads(response.get("arguments", "{}"))
                                 result = ""
 
-                                if function_name == "get_vehicle_details":
-                                    vehicle_id = args.get("vehicle_id")
-                                    result = get_vehicle_details(
-                                        tool_input={"vehicle_id": vehicle_id}
-                                    )
+                                tool_to_invoke = next(
+                                    (
+                                        tool
+                                        for tool in TOOLS
+                                        if tool.__name__ == function_name
+                                    ),
+                                    None,
+                                )
 
-                                if function_name == "get_vector_info":
-                                    question = args.get("query")
-                                    result = get_vector_info(
-                                        tool_input={"query": question}
+                                if tool_to_invoke:
+                                    if function_name == "get_vehicle_details":
+                                        vehicle_id = args.get("vehicle_id")
+                                        result = tool_to_invoke(vehicle_id=vehicle_id)
+                                    if function_name == "get_vector_info":
+                                        query = args.get("query")
+                                        result = tool_to_invoke(query=query)
+                                else:
+                                    print(
+                                        f"Tool '{function_name}' not found in TOOLS array."
                                     )
 
                                 print(
@@ -208,7 +216,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                             "type": "response.create",
                                             "response": {
                                                 "modalities": ["text", "audio"],
-                                                "instructions": f'Respond to the user\'s question "{question}" based on this information: {result}. Be concise and friendly.',
+                                                "instructions": f"Respond to the user's question based on this information: {result}. Be concise and friendly.",
                                             },
                                         }
                                     )
@@ -307,6 +315,7 @@ def load_usecase_metadata(type: str):
     global VOICE
     global ADVANCED_SETTINGS
     global TOOLS_SCHEMA
+    global TOOLS
 
     INTRO = module.INTRO_TEXT
     INSTRUCTIONS = module.SYSTEM_INSTRUCTIONS
@@ -314,6 +323,7 @@ def load_usecase_metadata(type: str):
     VOICE = module.VOICE
     ADVANCED_SETTINGS = module.ADVANCED_SETTINGS
     TOOLS_SCHEMA = module.TOOLS_SCHEMA
+    TOOLS = module.TOOLS
 
 
 async def send_initial_conversation_item(openai_ws, greeting_text):

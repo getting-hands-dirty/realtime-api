@@ -1,11 +1,13 @@
 import requests
 import os
+from .util import tool
 
 BASE_URL = os.getenv(
     "TOOLS_API_URL", "https://mock-api-realtime-938786674786.us-central1.run.app"
 )
 
 
+@tool
 def book_appointment(
     customer_id: str, vehicle_id: str, date: str, time: str, service: str
 ):
@@ -34,6 +36,7 @@ def book_appointment(
     return response.json()
 
 
+@tool
 def get_vehicle_details(vehicle_id: str):
     """
     Retrieve details of a vehicle by its ID.
@@ -49,6 +52,7 @@ def get_vehicle_details(vehicle_id: str):
     return response.json()
 
 
+@tool
 def get_vector_info(query: str):
     """
     Query the vector information from the vector database.
@@ -65,6 +69,7 @@ def get_vector_info(query: str):
     return response.json()
 
 
+@tool
 def load_vector_info():
     """
     Load the vector information from the vector database.
@@ -78,31 +83,4 @@ def load_vector_info():
 
 
 TOOLS = [get_vehicle_details, get_vector_info]
-# TOOLS_SCHEMA = [
-#     {**tool, "name": tool.pop("title")} if "title" in tool else tool
-#     for tool in [tool.args_schema.model_json_schema() for tool in TOOLS]
-# ]
-# print(TOOLS_SCHEMA)
-
-TOOLS_SCHEMA = [
-    {
-        "type": "function",
-        "name": "get_vehicle_details",
-        "description": "Retrieve details of a vehicle by its ID.\n\nArgs:\n    vehicle_id (str): The ID of the vehicle.\n\nReturns:\n    dict: Response from the API.",
-        "parameters": {
-            "type": "object",
-            "properties": {"vehicle_id": {"type": "string"}},
-            "required": ["vehicle_id"],
-        },
-    },
-    {
-        "type": "function",
-        "name": "get_vector_info",
-        "description": "Query the information from the database on general questions.\n\nArgs:\n    query (str): The query text.\n\nReturns:\n    dict: Response from the API.",
-        "parameters": {
-            "type": "object",
-            "properties": {"query": {"type": "string"}},
-            "required": ["query"],
-        },
-    },
-]
+TOOLS_SCHEMA = [tool.get_schema() for tool in TOOLS]

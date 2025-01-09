@@ -234,7 +234,6 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     "item": {
                                         "type": "function_call_output",
                                         "call_id": call_id,
-                                        "role": "system",
                                         "output": result,
                                     },
                                 }

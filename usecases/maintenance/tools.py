@@ -48,7 +48,7 @@ def get_vector_info(query: str):
     headers = {"Content-Type": "application/json"}
     payload = {
         "query": query,
-        "filter": {"topic": "maintenance"},
+        "filter": {},
     }
 
     response = requests.post(url, json=payload, headers=headers)

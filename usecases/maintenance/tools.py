@@ -1,5 +1,7 @@
-import requests
 import os
+
+import requests
+
 from .util import tool
 
 BASE_URL = os.getenv(
@@ -48,7 +50,8 @@ def get_vector_info(query: str):
     headers = {"Content-Type": "application/json"}
     payload = {
         "query": query,
-        "filter": {},
+        "filter": {"topic": "maintenance"},
+        "native": True,
     }
 
     response = requests.post(url, json=payload, headers=headers)

@@ -1,18 +1,19 @@
-import os
-import json
-import base64
 import asyncio
-from config import REALTIIME_AUDIO_API_URL
+import base64
+import importlib
+import json
+import os
+import ssl
+import time
+
 import websockets
-from fastapi import FastAPI, WebSocket, Request
+from dotenv import load_dotenv
+from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.websockets import WebSocketDisconnect
-from twilio.twiml.voice_response import VoiceResponse, Connect
-from dotenv import load_dotenv
-import ssl
+from twilio.twiml.voice_response import Connect, VoiceResponse
 
-import importlib
-
+from config import REALTIIME_AUDIO_API_URL
 
 # Create an SSL context (for development purposes only)
 ssl_context = ssl.create_default_context()
@@ -202,32 +203,77 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                 )
                                 result = ""
 
-                                # ---- Intermediate response ----
+                                # List of different intermediate messages to rotate through
+                                intermediate_messages = [
+                                    "I'm processing your request, this will just take a moment...",
+                                    "Working on getting that information for you...",
+                                    "Almost there, retrieving the data you need...",
+                                    "Just a few more seconds while I gather the details...",
+                                    "Processing your request, thank you for your patience...",
+                                ]
+
+                                # Send initial intermediate message
                                 await openai_ws.send(
                                     json.dumps(
                                         {
                                             "type": "response.create",
                                             "response": {
                                                 "modalities": ["text", "audio"],
-                                                "instructions": "Respond to the user saying that the information is being processed until you get the function call result.",
+                                                "instructions": intermediate_messages[
+                                                    0
+                                                ],
                                             },
                                         }
                                     )
                                 )
 
+                                # Start async timer for updating messages
+                                message_index = 1
+                                start_time = time.time()
+
                                 tool_to_invoke = TOOL_MAP.get(function_name)
                                 if tool_to_invoke:
-                                    result = tool_to_invoke(**args)
+                                    # If the function call takes longer than 3 seconds, send another intermediate message
+                                    while result == "":
+                                        if time.time() - start_time > 3:
+                                            await openai_ws.send(
+                                                json.dumps(
+                                                    {
+                                                        "type": "response.create",
+                                                        "response": {
+                                                            "modalities": [
+                                                                "text",
+                                                                "audio",
+                                                            ],
+                                                            "instructions": intermediate_messages[
+                                                                message_index
+                                                                % len(
+                                                                    intermediate_messages
+                                                                )
+                                                            ],
+                                                        },
+                                                    }
+                                                )
+                                            )
+                                            message_index += 1
+                                            start_time = time.time()
 
-                                    print(
-                                        f"Received function call: {function_name} | {call_id} with args: {args}, {result}"
-                                    )
+                                        # Try to get the result
+                                        result = tool_to_invoke(**args)
+                                        if result:
+                                            print(
+                                                f"Received function call: {function_name} | {call_id} with args: {args}, {result}"
+                                            )
+                                            break
+
+                                        # Add a small delay to prevent CPU overload
+                                        # await asyncio.sleep(0.5)
                                 else:
                                     print(
                                         f"Tool '{function_name}' not found in TOOL_MAP."
                                     )
 
-                                # Prepare events
+                                # Send function output
                                 function_output_event = {
                                     "type": "conversation.item.create",
                                     "item": {
@@ -238,6 +284,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                 }
                                 await openai_ws.send(json.dumps(function_output_event))
 
+                                # Send final response
                                 response_create_event = {
                                     "type": "response.create",
                                     "response": {
@@ -248,10 +295,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                 await openai_ws.send(json.dumps(response_create_event))
 
                             except Exception as e:
-                                print(
-                                    "Error processing question via Assistant:",
-                                    e,
-                                )
+                                print("Error processing question via Assistant:", e)
                                 await openai_ws.send(
                                     json.dumps(
                                         {

@@ -173,56 +173,56 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                 args = json.loads(response.get("arguments", "{}"))
                                 result = ""
 
-                                if function_name == "get_vehicle_details":
-                                    from usecases.maintenance.tools import (
-                                        get_vehicle_details,
-                                    )
-
-                                    vehicle_id = args.get("vehicle_id")
-                                    result = get_vehicle_details(vehicle_id=vehicle_id)
-
-                                if function_name == "get_vector_info":
-                                    from usecases.maintenance.tools import (
-                                        get_vector_info,
-                                    )
-
-                                    query = args.get("query")
-                                    result = get_vector_info(query=query)
-
-                                if function_name == "book_appointment":
-                                    from usecases.maintenance.tools import (
-                                        book_appointment,
-                                    )
-
-                                    customer_id = args.get("customer_id")
-                                    vehicle_id = args.get("vehicle_id")
-                                    date = args.get("date")
-                                    time = args.get("time")
-                                    service = args.get("service")
-
-                                    result = book_appointment(
-                                        customer_id=customer_id,
-                                        vehicle_id=vehicle_id,
-                                        date=date,
-                                        time=time,
-                                        service=service,
-                                    )
-
-                                # tool_to_invoke = next(
-                                #     (
-                                #         tool
-                                #         for tool in TOOLS
-                                #         if tool.__name__ == function_name
-                                #     ),
-                                #     None,
-                                # )
-
-                                # if tool_to_invoke:
-                                #     result = tool_to_invoke(**args)
-                                # else:
-                                #     print(
-                                #         f"Tool '{function_name}' not found in TOOLS array."
+                                # if function_name == "get_vehicle_details":
+                                #     from usecases.maintenance.tools import (
+                                #         get_vehicle_details,
                                 #     )
+
+                                #     vehicle_id = args.get("vehicle_id")
+                                #     result = get_vehicle_details(vehicle_id=vehicle_id)
+
+                                # if function_name == "get_vector_info":
+                                #     from usecases.maintenance.tools import (
+                                #         get_vector_info,
+                                #     )
+
+                                #     query = args.get("query")
+                                #     result = get_vector_info(query=query)
+
+                                # if function_name == "book_appointment":
+                                #     from usecases.maintenance.tools import (
+                                #         book_appointment,
+                                #     )
+
+                                #     customer_id = args.get("customer_id")
+                                #     vehicle_id = args.get("vehicle_id")
+                                #     date = args.get("date")
+                                #     time = args.get("time")
+                                #     service = args.get("service")
+
+                                #     result = book_appointment(
+                                #         customer_id=customer_id,
+                                #         vehicle_id=vehicle_id,
+                                #         date=date,
+                                #         time=time,
+                                #         service=service,
+                                #     )
+
+                                tool_to_invoke = next(
+                                    (
+                                        tool
+                                        for tool in TOOLS
+                                        if tool.__name__ == function_name
+                                    ),
+                                    None,
+                                )
+
+                                if tool_to_invoke:
+                                    result = tool_to_invoke(**args)
+                                else:
+                                    print(
+                                        f"Tool '{function_name}' not found in TOOLS array."
+                                    )
 
                                 print(
                                     f"Received function call: {function_name} | {call_id} with args: {args}, {result}"

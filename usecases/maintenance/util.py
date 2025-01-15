@@ -1,8 +1,9 @@
 import inspect
+from functools import wraps
 
 
 def tool(func):
-
+    @wraps(func)  # Preserve the original function's metadata
     def wrapper_func(*args, **kwargs):
         return func(*args, **kwargs)
 

@@ -164,6 +164,30 @@ async def handle_media_stream(websocket: WebSocket, type: str):
 
                             await send_mark(websocket, stream_sid)
 
+                        # if (
+                        #     response.get("type")
+                        #     == "response.function_call_arguments.delta"
+                        #     and "delta" in response
+                        # ):
+
+                        #     # Path to your .mp3 file
+                        #     file_path = "./usecases/maintenance/custom-audio.wav"
+
+                        #     # Read the .mp3 file in binary mode
+                        #     with open(file_path, "rb") as audio_file:
+                        #         # Encode the file content to Base64
+                        #         audio_payload = base64.b64encode(
+                        #             audio_file.read()
+                        #         ).decode("utf-8")
+
+                        #         audio_delta = {
+                        #             "event": "media",
+                        #             "streamSid": stream_sid,
+                        #             "media": {"payload": audio_payload},
+                        #         }
+
+                        #         await websocket.send_json(audio_delta)
+
                         if (
                             response.get("type")
                             == "response.function_call_arguments.done"
@@ -177,6 +201,19 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     else {}
                                 )
                                 result = ""
+
+                                # ---- Intermediate response ----
+                                await openai_ws.send(
+                                    json.dumps(
+                                        {
+                                            "type": "response.create",
+                                            "response": {
+                                                "modalities": ["text", "audio"],
+                                                "instructions": "Respond to the user saying that the information is being processed until you get the function call result.",
+                                            },
+                                        }
+                                    )
+                                )
 
                                 tool_to_invoke = TOOL_MAP.get(function_name)
                                 if tool_to_invoke:

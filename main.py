@@ -80,6 +80,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
     """Handle WebSocket connections between Twilio and OpenAI."""
     try:
         print("Client connected")
+        TOOL_MAP = {tool.__name__: tool for tool in TOOLS}
 
         await websocket.accept()
 
@@ -170,65 +171,26 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                             try:
                                 call_id = response.get("call_id")
                                 function_name = response.get("name")
-                                args = json.loads(response.get("arguments", "{}"))
+                                args = (
+                                    json.loads(response.get("arguments", "{}"))
+                                    if "arguments" in response
+                                    else {}
+                                )
                                 result = ""
 
-                                # if function_name == "get_vehicle_details":
-                                #     from usecases.maintenance.tools import (
-                                #         get_vehicle_details,
-                                #     )
-
-                                #     vehicle_id = args.get("vehicle_id")
-                                #     result = get_vehicle_details(vehicle_id=vehicle_id)
-
-                                # if function_name == "get_vector_info":
-                                #     from usecases.maintenance.tools import (
-                                #         get_vector_info,
-                                #     )
-
-                                #     query = args.get("query")
-                                #     result = get_vector_info(query=query)
-
-                                # if function_name == "book_appointment":
-                                #     from usecases.maintenance.tools import (
-                                #         book_appointment,
-                                #     )
-
-                                #     customer_id = args.get("customer_id")
-                                #     vehicle_id = args.get("vehicle_id")
-                                #     date = args.get("date")
-                                #     time = args.get("time")
-                                #     service = args.get("service")
-
-                                #     result = book_appointment(
-                                #         customer_id=customer_id,
-                                #         vehicle_id=vehicle_id,
-                                #         date=date,
-                                #         time=time,
-                                #         service=service,
-                                #     )
-
-                                tool_to_invoke = next(
-                                    (
-                                        tool
-                                        for tool in TOOLS
-                                        if tool.__name__ == function_name
-                                    ),
-                                    None,
-                                )
-
+                                tool_to_invoke = TOOL_MAP.get(function_name)
                                 if tool_to_invoke:
                                     result = tool_to_invoke(**args)
+
+                                    print(
+                                        f"Received function call: {function_name} | {call_id} with args: {args}, {result}"
+                                    )
                                 else:
                                     print(
-                                        f"Tool '{function_name}' not found in TOOLS array."
+                                        f"Tool '{function_name}' not found in TOOL_MAP."
                                     )
 
-                                print(
-                                    f"Received function call: {function_name} | {call_id} with args: {args}, {result}"
-                                )
-
-                                # Send the streamed response as OpenAI response
+                                # Prepare events
                                 function_output_event = {
                                     "type": "conversation.item.create",
                                     "item": {
@@ -237,26 +199,20 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                         "output": result,
                                     },
                                 }
-
-                                # Send the function call output (answer from Pinecone)
                                 await openai_ws.send(json.dumps(function_output_event))
 
-                                # Send the response to OpenAI to create a reply
-                                await openai_ws.send(
-                                    json.dumps(
-                                        {
-                                            "type": "response.create",
-                                            "response": {
-                                                "modalities": ["text", "audio"],
-                                                "instructions": f"Respond to the user's question based on this information: {result}. Be concise and friendly.",
-                                            },
-                                        }
-                                    )
-                                )
+                                response_create_event = {
+                                    "type": "response.create",
+                                    "response": {
+                                        "modalities": ["text", "audio"],
+                                        "instructions": f"Respond to the user's question based on this information: {result}. Be concise and friendly.",
+                                    },
+                                }
+                                await openai_ws.send(json.dumps(response_create_event))
 
                             except Exception as e:
                                 print(
-                                    "Error processing question via Pinecone Assistant:",
+                                    "Error processing question via Assistant:",
                                     e,
                                 )
                                 await openai_ws.send(

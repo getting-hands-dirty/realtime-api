@@ -151,5 +151,6 @@ def get_inventory_search(
 
 
 # TOOLS = [get_vehicle_details, get_vector_info, book_appointment]
-TOOLS = [get_vector_info_inventory]
+# TOOLS = [get_vector_info_inventory]
+TOOLS = [get_inventory_search]
 TOOLS_SCHEMA = [tool.get_schema() for tool in TOOLS]

@@ -60,23 +60,6 @@ def get_vector_info(query: str):
 
 
 @tool
-def get_vector_info_inventory(query: str):
-    """
-    Query the knowledge base for vehicle inventory information. VIN, StockNumber, Type, Make, Model, Year, etc will be returned.
-    """
-    url = f"{BASE_URL}/vector-info"
-    headers = {"Content-Type": "application/json"}
-    payload = {
-        "query": query,
-        "filter": {"topic": "inventory"},
-        "native": True,
-    }
-
-    response = requests.post(url, json=payload, headers=headers)
-    return response.text
-
-
-@tool
 def get_inventory_search(
     vin: Optional[str] = None,
     stock_number: Optional[str] = None,
@@ -97,29 +80,7 @@ def get_inventory_search(
     doors: Optional[int] = None,
 ):
     """
-    Search the database for vehicle inventory information.
-
-    Parameters:
-        vin (str): Vehicle Identification Number.
-        stock_number (str): Stock number of the vehicle.
-        vehicle_type (str): Type of the vehicle (e.g., SUV, Sedan).
-        year (int): Manufacturing year of the vehicle.
-        make (str): Vehicle manufacturer (e.g., Toyota).
-        model (str): Vehicle model (e.g., Corolla).
-        trim (str): Vehicle trim level.
-        style (str): Vehicle body style.
-        exterior_color (str): Exterior color of the vehicle.
-        interior_color (str): Interior color of the vehicle.
-        certified (bool): Whether the vehicle is certified pre-owned.
-        min_price (float): Minimum price range for the vehicle.
-        max_price (float): Maximum price range for the vehicle.
-        fuel_type (str): Type of fuel used by the vehicle.
-        transmission (str): Transmission type (e.g., Automatic, Manual).
-        drive_type (str): Drive type (e.g., AWD, FWD, RWD).
-        doors (int): Number of doors.
-
-    Returns:
-        str: Response from the inventory search API.
+    Search the database for vehicle inventory information. VIN, StockNumber, Type, Make, Model, Year, etc will be returned.
     """
     query_params = {
         "vin": vin,

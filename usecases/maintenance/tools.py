@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import requests
 
@@ -58,5 +59,39 @@ def get_vector_info(query: str):
     return response.text
 
 
-TOOLS = [get_vehicle_details, get_vector_info, book_appointment]
+@tool
+def get_vector_info_inventory(query: str):
+    """
+    Query the knowledge base for vehicle inventory information. VIN, StockNumber, Type, Make, Model, Year, etc will be returned.
+    """
+    url = f"{BASE_URL}/vector-info"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "query": query,
+        "filter": {"topic": "inventory"},
+        "native": True,
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+    return response.text
+
+
+@tool
+def get_inventory_search(
+    vin: Optional[str] = None,
+    make: Optional[str] = None,
+    model: Optional[str] = None,
+    year: Optional[int] = None,
+):
+    """
+    Search the database for vehicle inventory information. VIN, StockNumber, Type, Make, Model, Year, etc will be returned.
+    """
+    url = f"{BASE_URL}/search?vin={vin}&make={make}&model={model}&year={year}"
+    print("URL: ", url)
+    response = requests.get(url)
+    return response.text
+
+
+# TOOLS = [get_vehicle_details, get_vector_info, book_appointment]
+TOOLS = [get_vector_info_inventory]
 TOOLS_SCHEMA = [tool.get_schema() for tool in TOOLS]

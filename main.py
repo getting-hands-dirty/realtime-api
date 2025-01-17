@@ -82,6 +82,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
     try:
         print("Client connected")
         TOOL_MAP = {tool.__name__: tool for tool in TOOLS}
+        print("Current tools: ", TOOL_MAP.keys())
 
         await websocket.accept()
 

@@ -19,6 +19,7 @@ parameter_descriptions = {
     "transmission": "Transmission type (e.g., Automatic, Manual).",
     "drive_type": "Drive type (e.g., AWD, FWD, RWD).",
     "doors": "Number of doors.",
+    "description": "Description of the vehicle any generic information.",
 }
 
 

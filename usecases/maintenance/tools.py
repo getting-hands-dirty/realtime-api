@@ -78,6 +78,7 @@ def get_inventory_search(
     transmission: Optional[str] = None,
     drive_type: Optional[str] = None,
     doors: Optional[int] = None,
+    description: Optional[str] = None,
 ):
     """
     Search the database for vehicle inventory information. VIN, StockNumber, Type, Make, Model, Year, etc will be returned.
@@ -100,6 +101,7 @@ def get_inventory_search(
         "transmission": transmission,
         "drive_type": drive_type,
         "doors": doors,
+        "description": description,
     }
 
     # Filter out None values from query parameters

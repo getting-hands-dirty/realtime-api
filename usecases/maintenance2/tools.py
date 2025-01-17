@@ -66,11 +66,7 @@ def get_vector_info_inventory(query: str):
     """
     url = f"{BASE_URL}/vector-info"
     headers = {"Content-Type": "application/json"}
-    payload = {
-        "query": query,
-        "filter": {"topic": "inventory"},
-        "native": True,
-    }
+    payload = {"query": query, "filter": {"topic": "inventory"}, "native": True, "k": 2}
 
     response = requests.post(url, json=payload, headers=headers)
     return response.text

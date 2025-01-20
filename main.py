@@ -139,8 +139,8 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                     async for openai_message in openai_ws:
                         response = json.loads(openai_message)
                         response_type = response.get("type", "")
-                        if response_type in LOG_EVENT_TYPES:
-                            print(f"Received event: {response['type']}", response)
+                        # if response_type in LOG_EVENT_TYPES:
+                        print(f"Received event: {response_type}", response)
 
                         if (
                             response_type == "response.audio.delta"

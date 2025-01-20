@@ -47,16 +47,17 @@ INTRO = ""
 ADVANCED_SETTINGS = {}
 TOOLS_SCHEMA = []
 TOOLS = []
-app = FastAPI()
 
 
 if not OPENAI_API_KEY:
     raise ValueError("Missing the OpenAI API key. Please set it in the .env file.")
 
+app = FastAPI()
+
 
 @app.get("/", response_class=JSONResponse)
 async def index_page():
-    load_usecase_metadata("maintenance")
+    load_metadata("maintenance")
     return {"message": INTRO}
 
 
@@ -64,7 +65,7 @@ async def index_page():
 async def handle_incoming_call(request: Request, type: str):
     """Handle incoming call and return TwiML response to connect to Media Stream."""
     response = VoiceResponse()
-    load_usecase_metadata(type)
+    load_metadata(type)
     # <Say> punctuation to improve text-to-speech flow
     if INTRO:
         response.say(INTRO)
@@ -136,11 +137,12 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                 try:
                     async for openai_message in openai_ws:
                         response = json.loads(openai_message)
-                        if response["type"] in LOG_EVENT_TYPES:
+                        response_type = response.get("type", "")
+                        if response_type in LOG_EVENT_TYPES:
                             print(f"Received event: {response['type']}", response)
 
                         if (
-                            response.get("type") == "response.audio.delta"
+                            response_type == "response.audio.delta"
                             and "delta" in response
                         ):
                             audio_payload = base64.b64encode(
@@ -167,7 +169,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                             await send_mark(websocket, stream_sid)
 
                         # if (
-                        #     response.get("type")
+                        #     response_type
                         #     == "response.function_call_arguments.delta"
                         #     and "delta" in response
                         # ):
@@ -190,10 +192,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
 
                         #         await websocket.send_json(audio_delta)
 
-                        if (
-                            response.get("type")
-                            == "response.function_call_arguments.done"
-                        ):
+                        if response_type == "response.function_call_arguments.done":
                             try:
                                 call_id = response.get("call_id")
                                 function_name = response.get("name")
@@ -213,25 +212,10 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     "Processing your request, thank you for your patience...",
                                 ]
 
-                                await send_initial_conversation_item(
+                                await send_conversation_item(
                                     openai_ws,
                                     f"Respond to the user with wait message. {intermediate_messages[0]}",
                                 )
-
-                                # # Send initial intermediate message
-                                # await openai_ws.send(
-                                #     json.dumps(
-                                #         {
-                                #             "type": "response.create",
-                                #             "response": {
-                                #                 "modalities": ["text", "audio"],
-                                #                 "instructions": intermediate_messages[
-                                #                     0
-                                #                 ],
-                                #             },
-                                #         }
-                                #     )
-                                # )
 
                                 # Start async timer for updating messages
                                 message_index = 1
@@ -242,42 +226,22 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     # If the function call takes longer than 2 seconds, send another intermediate message
                                     while result == "":
                                         if time.time() - start_time > 2:
-                                            await send_initial_conversation_item(
+                                            await send_conversation_item(
                                                 openai_ws,
                                                 f"Respond to the user with wait message. {intermediate_messages[message_index % len(intermediate_messages)]}",
                                             )
-                                            # await openai_ws.send(
-                                            #     json.dumps(
-                                            #         {
-                                            #             "type": "response.create",
-                                            #             "response": {
-                                            #                 "modalities": [
-                                            #                     "text",
-                                            #                     "audio",
-                                            #                 ],
-                                            #                 "instructions": intermediate_messages[
-                                            #                     message_index
-                                            #                     % len(
-                                            #                         intermediate_messages
-                                            #                     )
-                                            #                 ],
-                                            #             },
-                                            #         }
-                                            #     )
-                                            # )
                                             message_index += 1
                                             start_time = time.time()
 
                                         # Try to get the result
                                         result = tool_to_invoke(**args)
+
                                         if result:
                                             print(
                                                 f"Received function call: {function_name} | {call_id} with args: {args}, {result}"
                                             )
                                             break
 
-                                        # Add a small delay to prevent CPU overload
-                                        # await asyncio.sleep(0.5)
                                 else:
                                     print(
                                         f"Tool '{function_name}' not found in TOOL_MAP."
@@ -319,7 +283,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                 )
 
                         # Trigger an interruption. Your use case might work better using `input_audio_buffer.speech_stopped`, or combining the two.
-                        if response.get("type") == "input_audio_buffer.speech_started":
+                        if response_type == "input_audio_buffer.speech_started":
                             print("Speech started detected.")
                             if last_assistant_item:
                                 print(
@@ -384,7 +348,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
         await websocket.close()
 
 
-def load_usecase_metadata(type: str):
+def load_metadata(type: str):
     module_name = f"usecases.{type}.config"
     module = importlib.import_module(module_name)
 
@@ -405,21 +369,25 @@ def load_usecase_metadata(type: str):
     TOOLS = module.TOOLS
 
 
-async def send_initial_conversation_item(openai_ws, greeting_text):
+async def send_conversation_item(ws, text):
     """Send initial conversation item if AI talks first."""
-    initial_conversation_item = {
-        "type": "conversation.item.create",
-        "item": {
-            "type": "message",
-            "role": "user",
-            "content": [{"type": "input_text", "text": greeting_text}],
-        },
-    }
-    await openai_ws.send(json.dumps(initial_conversation_item))
-    await openai_ws.send(json.dumps({"type": "response.create"}))
+    await ws.send(
+        json.dumps(
+            {
+                "type": "conversation.item.create",
+                "item": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": text}],
+                },
+            }
+        )
+    )
+
+    await ws.send(json.dumps({"type": "response.create"}))
 
 
-async def initialize_session(openai_ws):
+async def initialize_session(ws):
     """Control initial session with OpenAI."""
     session_update = {
         "type": "session.update",
@@ -439,10 +407,10 @@ async def initialize_session(openai_ws):
         },
     }
     print("Sending session update:", json.dumps(session_update))
-    await openai_ws.send(json.dumps(session_update))
+    await ws.send(json.dumps(session_update))
 
     # Uncomment the next line to have the AI speak first
-    await send_initial_conversation_item(openai_ws, GREETING_TEXT)
+    await send_conversation_item(ws, GREETING_TEXT)
 
 
 if __name__ == "__main__":

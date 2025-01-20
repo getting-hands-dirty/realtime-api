@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.websockets import WebSocketDisconnect
 from twilio.twiml.voice_response import Connect, VoiceResponse
 
-from config import REALTIIME_AUDIO_API_URL
+from config import REALTIME_AUDIO_API_URL
 
 # Create an SSL context (for development purposes only)
 ssl_context = ssl.create_default_context()
@@ -87,7 +87,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
         await websocket.accept()
 
         async with websockets.connect(
-            REALTIIME_AUDIO_API_URL,
+            REALTIME_AUDIO_API_URL,
             extra_headers={
                 "Authorization": f"Bearer {OPENAI_API_KEY}",
                 "OpenAI-Beta": "realtime=v1",
@@ -213,20 +213,25 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     "Processing your request, thank you for your patience...",
                                 ]
 
-                                # Send initial intermediate message
-                                await openai_ws.send(
-                                    json.dumps(
-                                        {
-                                            "type": "response.create",
-                                            "response": {
-                                                "modalities": ["text", "audio"],
-                                                "instructions": intermediate_messages[
-                                                    0
-                                                ],
-                                            },
-                                        }
-                                    )
+                                await send_initial_conversation_item(
+                                    openai_ws,
+                                    f"Respond to the user with wait message. {intermediate_messages[0]}",
                                 )
+
+                                # # Send initial intermediate message
+                                # await openai_ws.send(
+                                #     json.dumps(
+                                #         {
+                                #             "type": "response.create",
+                                #             "response": {
+                                #                 "modalities": ["text", "audio"],
+                                #                 "instructions": intermediate_messages[
+                                #                     0
+                                #                 ],
+                                #             },
+                                #         }
+                                #     )
+                                # )
 
                                 # Start async timer for updating messages
                                 message_index = 1
@@ -234,28 +239,32 @@ async def handle_media_stream(websocket: WebSocket, type: str):
 
                                 tool_to_invoke = TOOL_MAP.get(function_name)
                                 if tool_to_invoke:
-                                    # If the function call takes longer than 3 seconds, send another intermediate message
+                                    # If the function call takes longer than 2 seconds, send another intermediate message
                                     while result == "":
-                                        if time.time() - start_time > 3:
-                                            await openai_ws.send(
-                                                json.dumps(
-                                                    {
-                                                        "type": "response.create",
-                                                        "response": {
-                                                            "modalities": [
-                                                                "text",
-                                                                "audio",
-                                                            ],
-                                                            "instructions": intermediate_messages[
-                                                                message_index
-                                                                % len(
-                                                                    intermediate_messages
-                                                                )
-                                                            ],
-                                                        },
-                                                    }
-                                                )
+                                        if time.time() - start_time > 2:
+                                            await send_initial_conversation_item(
+                                                openai_ws,
+                                                f"Respond to the user with wait message. {intermediate_messages[message_index % len(intermediate_messages)]}",
                                             )
+                                            # await openai_ws.send(
+                                            #     json.dumps(
+                                            #         {
+                                            #             "type": "response.create",
+                                            #             "response": {
+                                            #                 "modalities": [
+                                            #                     "text",
+                                            #                     "audio",
+                                            #                 ],
+                                            #                 "instructions": intermediate_messages[
+                                            #                     message_index
+                                            #                     % len(
+                                            #                         intermediate_messages
+                                            #                     )
+                                            #                 ],
+                                            #             },
+                                            #         }
+                                            #     )
+                                            # )
                                             message_index += 1
                                             start_time = time.time()
 
@@ -290,7 +299,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     "type": "response.create",
                                     "response": {
                                         "modalities": ["text", "audio"],
-                                        "instructions": f"Respond to the user's question based on this information: {result}. Be concise and friendly.",
+                                        "instructions": f"Formulate an answer strictly based on the provided context chunks without adding external knowledge or assumptions. context: {result}. Be concise and friendly.",
                                     },
                                 }
                                 await openai_ws.send(json.dumps(response_create_event))

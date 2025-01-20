@@ -37,6 +37,11 @@ LOG_EVENT_TYPES = [
     "input_audio_buffer.speech_started",
     "session.created",
     "response.function_call_arguments.done",
+    "conversation.item.created",
+    "response.audio_transcript.done",
+    "response.output_item.added",
+    "response.content_part.done",
+    "response.content_part.added",
 ]
 SHOW_TIMING_MATH = False
 
@@ -84,9 +89,9 @@ async def handle_media_stream(websocket: WebSocket, type: str):
         print("Client connected")
         TOOL_MAP = {tool.__name__: tool for tool in TOOLS}
         print(f"Current tools: {TOOL_MAP} \n schema: {TOOLS_SCHEMA}")
-        conversations = []
 
         await websocket.accept()
+        conversations = {}
 
         async with websockets.connect(
             REALTIME_AUDIO_API_URL,
@@ -139,8 +144,8 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                     async for openai_message in openai_ws:
                         response = json.loads(openai_message)
                         response_type = response.get("type", "")
-                        # if response_type in LOG_EVENT_TYPES:
-                        print(f"Received event: {response_type}", response)
+                        if response_type in LOG_EVENT_TYPES:
+                            print(f"Received event: {response_type}", response)
 
                         if (
                             response_type == "response.audio.delta"
@@ -193,17 +198,21 @@ async def handle_media_stream(websocket: WebSocket, type: str):
 
                         #         await websocket.send_json(audio_delta)
 
-                        if response_type == "response.done":
+                        if (
+                            response_type == "response.created"
+                            or response_type == "response.done"
+                        ):
                             current_response = response.get("response", {})
-                            conversations.append(
-                                {
-                                    "response_id": current_response.get("id"),
-                                    "conversation_id": current_response.get(
-                                        "conversation_id"
-                                    ),
-                                    "items": current_response.get("output", []),
-                                }
-                            )
+                            conversation_id = current_response.get("conversation_id")
+                            response_id = current_response.get("id")
+                            status = current_response.get("status")
+
+                            if conversation_id:
+                                if conversation_id not in conversations:
+                                    conversations[conversation_id] = {}
+
+                                # Update the response or add a new one
+                                conversations[conversation_id][response_id] = status
 
                         if response_type == "response.function_call_arguments.done":
                             try:
@@ -284,16 +293,9 @@ async def handle_media_stream(websocket: WebSocket, type: str):
 
                             except Exception as e:
                                 print("Error processing question via Assistant:", e)
-                                await openai_ws.send(
-                                    json.dumps(
-                                        {
-                                            "type": "response.create",
-                                            "response": {
-                                                "modalities": ["text", "audio"],
-                                                "instructions": "I apologize, but I'm having trouble processing your request right now. Is there anything else I can help you with?",
-                                            },
-                                        }
-                                    )
+                                await send_conversation_item(
+                                    openai_ws,
+                                    f"Respond to the user with apologetic message. ' apologize, but I'm having trouble processing your request right now. Is there anything else I can help you with?'",
                                 )
 
                         # Trigger an interruption. Your use case might work better using `input_audio_buffer.speech_stopped`, or combining the two.
@@ -304,6 +306,14 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     f"Interrupting response with id: {last_assistant_item}"
                                 )
                                 await handle_speech_started_event()
+
+                        if response_type == "error":
+                            print("Error from OpenAI:", response["error"]["message"])
+                            await send_conversation_item(
+                                openai_ws,
+                                f"Respond to the user with apologetic message. ' apologize, but I'm having trouble processing your request right now. Is there anything else I can help you with?'",
+                            )
+
                 except Exception as e:
                     print(f"Error in send_to_twilio: {e}")
 

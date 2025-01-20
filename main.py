@@ -84,6 +84,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
         print("Client connected")
         TOOL_MAP = {tool.__name__: tool for tool in TOOLS}
         print(f"Current tools: {TOOL_MAP} \n schema: {TOOLS_SCHEMA}")
+        conversations = []
 
         await websocket.accept()
 
@@ -192,6 +193,18 @@ async def handle_media_stream(websocket: WebSocket, type: str):
 
                         #         await websocket.send_json(audio_delta)
 
+                        if response_type == "response.done":
+                            current_response = response.get("response", {})
+                            conversations.append(
+                                {
+                                    "response_id": current_response.get("id"),
+                                    "conversation_id": current_response.get(
+                                        "conversation_id"
+                                    ),
+                                    "items": current_response.get("output", []),
+                                }
+                            )
+
                         if response_type == "response.function_call_arguments.done":
                             try:
                                 call_id = response.get("call_id")
@@ -202,6 +215,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     else {}
                                 )
                                 result = ""
+                                print("Conversations:", conversations)
 
                                 # List of different intermediate messages to rotate through
                                 intermediate_messages = [

@@ -91,7 +91,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
         print(f"Current tools: {TOOL_MAP} \n schema: {TOOLS_SCHEMA}")
 
         await websocket.accept()
-        conversations = {}
+        responses = []
 
         async with websockets.connect(
             REALTIME_AUDIO_API_URL,
@@ -203,16 +203,27 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                             or response_type == "response.done"
                         ):
                             current_response = response.get("response", {})
-                            conversation_id = current_response.get("conversation_id")
                             response_id = current_response.get("id")
                             status = current_response.get("status")
 
-                            if conversation_id:
-                                if conversation_id not in conversations:
-                                    conversations[conversation_id] = {}
+                            # Check if the response_id already exists
+                            existing_response = next(
+                                (
+                                    r
+                                    for r in responses
+                                    if r["response_id"] == response_id
+                                ),
+                                None,
+                            )
 
-                                # Update the response or add a new one
-                                conversations[conversation_id][response_id] = status
+                            if existing_response:
+                                # Update the status if the response_id exists
+                                existing_response["status"] = status
+                            else:
+                                # Otherwise, add a new entry
+                                responses.append(
+                                    {"response_id": response_id, "status": status}
+                                )
 
                         if response_type == "response.function_call_arguments.done":
                             try:
@@ -223,8 +234,8 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     if "arguments" in response
                                     else {}
                                 )
+
                                 result = ""
-                                print("Conversations:", conversations)
 
                                 # List of different intermediate messages to rotate through
                                 intermediate_messages = [
@@ -235,9 +246,19 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     "Processing your request, thank you for your patience...",
                                 ]
 
+                                is_last_response_active = (
+                                    responses[-1]["status"] == "in_progress"
+                                    if responses
+                                    else False
+                                )
+                                print(
+                                    f"responses: {responses}, is_last_response_active: {is_last_response_active}"
+                                )
+
                                 await send_conversation_item(
                                     openai_ws,
                                     f"Respond to the user with wait message. {intermediate_messages[0]}",
+                                    is_last_response_active,
                                 )
 
                                 # Start async timer for updating messages
@@ -252,6 +273,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                             await send_conversation_item(
                                                 openai_ws,
                                                 f"Respond to the user with wait message. {intermediate_messages[message_index % len(intermediate_messages)]}",
+                                                is_last_response_active,
                                             )
                                             message_index += 1
                                             start_time = time.time()
@@ -309,10 +331,6 @@ async def handle_media_stream(websocket: WebSocket, type: str):
 
                         if response_type == "error":
                             print("Error from OpenAI:", response["error"]["message"])
-                            await send_conversation_item(
-                                openai_ws,
-                                f"Respond to the user with apologetic message. ' apologize, but I'm having trouble processing your request right now. Is there anything else I can help you with?'",
-                            )
 
                 except Exception as e:
                     print(f"Error in send_to_twilio: {e}")
@@ -393,8 +411,15 @@ def load_metadata(type: str):
     TOOLS = module.TOOLS
 
 
-async def send_conversation_item(ws, text):
+async def send_conversation_item(ws, text, is_last_response_active=False):
     """Send initial conversation item if AI talks first."""
+    if is_last_response_active:
+        print(
+            "Skipping conversation item creation as last response is active. Text:",
+            text,
+        )
+        return
+
     await ws.send(
         json.dumps(
             {

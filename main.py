@@ -91,7 +91,6 @@ async def handle_media_stream(websocket: WebSocket, type: str):
         print(f"Current tools: {TOOL_MAP} \n schema: {TOOLS_SCHEMA}")
 
         await websocket.accept()
-        responses = []
 
         async with websockets.connect(
             REALTIME_AUDIO_API_URL,
@@ -197,123 +196,122 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                         #         }
 
                         #         await websocket.send_json(audio_delta)
+                        # if response_type == "response.function_call_arguments.done":
 
-                        if (
-                            response_type == "response.created"
-                            or response_type == "response.done"
-                        ):
+                        if response_type == "response.done":
                             current_response = response.get("response", {})
-                            response_id = current_response.get("id")
                             status = current_response.get("status")
+                            print(f"Received current_response: {current_response}")
 
-                            # Check if the response_id already exists
-                            existing_response = next(
-                                (
-                                    r
-                                    for r in responses
-                                    if r["response_id"] == response_id
-                                ),
-                                None,
-                            )
-
-                            if existing_response:
-                                # Update the status if the response_id exists
-                                existing_response["status"] = status
-                            else:
-                                # Otherwise, add a new entry
-                                responses.append(
-                                    {"response_id": response_id, "status": status}
+                            if status == "completed":
+                                current_response_output = current_response.get(
+                                    "output", []
                                 )
+                                last_response_result = (
+                                    current_response_output[-1]
+                                    if current_response_output
+                                    else None
+                                )
+                                print("Last response result:", last_response_result)
 
-                        if response_type == "response.function_call_arguments.done":
-                            try:
-                                call_id = response.get("call_id")
-                                function_name = response.get("name")
-                                args = json.loads(response.get("arguments", "{}"))
+                                if last_response_result:
+                                    try:
+                                        call_id = last_response_result.get("call_id")
+                                        function_name = last_response_result.get("name")
+                                        args = json.loads(
+                                            last_response_result.get("arguments", "{}")
+                                        )
 
-                                intermediate_messages = [
-                                    "I'm processing your request, this will just take a moment...",
-                                    "Working on getting that information for you...",
-                                    "Almost there, retrieving the data you need...",
-                                    "Just a few more seconds while I gather the details...",
-                                    "Processing your request, thank you for your patience...",
-                                ]
+                                        intermediate_messages = [
+                                            "I'm processing your request, this will just take a moment...",
+                                            "Working on getting that information for you...",
+                                            "Almost there, retrieving the data you need...",
+                                            "Just a few more seconds while I gather the details...",
+                                            "Processing your request, thank you for your patience...",
+                                        ]
 
-                                tool_to_invoke = TOOL_MAP.get(function_name)
-                                if not tool_to_invoke:
-                                    print(
-                                        f"Tool '{function_name}' not found in TOOL_MAP."
-                                    )
-                                    return
+                                        tool_to_invoke = TOOL_MAP.get(function_name)
 
-                                message_index = 0
-                                result = None
+                                        if tool_to_invoke:
+                                            message_index = 0
+                                            result = None
 
-                                async def send_intermediate_messages():
-                                    nonlocal message_index
-                                    is_last_response_active = (
-                                        responses[-1]["status"] == "in_progress"
-                                        if responses
-                                        else False
-                                    )
-                                    print(
-                                        f"responses: {responses}, is_last_response_active: {is_last_response_active}"
-                                    )
+                                            async def send_intermediate_messages():
+                                                nonlocal message_index
+                                                is_last_response_active = (
+                                                    last_response_result.get("status")
+                                                    == "in_progress"
+                                                )
 
-                                    while result is None:
-                                        await asyncio.sleep(2)  # Wait for 2 seconds
-                                        if not result and not is_last_response_active:
-                                            await send_conversation_item(
-                                                openai_ws,
-                                                intermediate_messages[
-                                                    message_index
-                                                    % len(intermediate_messages)
-                                                ],
-                                                is_last_response_active,
+                                                while result is None:
+                                                    await asyncio.sleep(
+                                                        2
+                                                    )  # Wait for 2 seconds
+                                                    if (
+                                                        not result
+                                                        and not is_last_response_active
+                                                    ):
+                                                        await send_conversation_item(
+                                                            openai_ws,
+                                                            intermediate_messages[
+                                                                message_index
+                                                                % len(
+                                                                    intermediate_messages
+                                                                )
+                                                            ],
+                                                            is_last_response_active,
+                                                        )
+                                                        message_index += 1
+
+                                            # Run intermediate message sender and tool invocation concurrently
+                                            message_task = asyncio.create_task(
+                                                send_intermediate_messages()
                                             )
-                                            message_index += 1
+                                            try:
+                                                result = await asyncio.to_thread(
+                                                    tool_to_invoke, **args
+                                                )  # Run in thread
+                                            finally:
+                                                message_task.cancel()  # Stop intermediate messages
 
-                                # Run intermediate message sender and tool invocation concurrently
-                                message_task = asyncio.create_task(
-                                    send_intermediate_messages()
-                                )
-                                try:
-                                    result = await asyncio.to_thread(
-                                        tool_to_invoke, **args
-                                    )  # Run in thread
-                                finally:
-                                    message_task.cancel()  # Stop intermediate messages
+                                            if result:
+                                                print(
+                                                    f"Received function call result: {result}"
+                                                )
+                                                # Send the final response
+                                                function_output_event = {
+                                                    "type": "conversation.item.create",
+                                                    "item": {
+                                                        "type": "function_call_output",
+                                                        "call_id": call_id,
+                                                        "output": result,
+                                                    },
+                                                }
+                                                await openai_ws.send(
+                                                    json.dumps(function_output_event)
+                                                )
 
-                                if result:
-                                    print(f"Received function call result: {result}")
-                                    # Send the final response
-                                # Send function output
-                                function_output_event = {
-                                    "type": "conversation.item.create",
-                                    "item": {
-                                        "type": "function_call_output",
-                                        "call_id": call_id,
-                                        "output": result,
-                                    },
-                                }
-                                await openai_ws.send(json.dumps(function_output_event))
+                                                # Send final response
+                                                response_create_event = {
+                                                    "type": "response.create",
+                                                    "response": {
+                                                        "modalities": ["text", "audio"],
+                                                        "instructions": f"Formulate an answer strictly based on the provided context chunks without adding external knowledge or assumptions. context: {result}. Be concise and friendly.",
+                                                    },
+                                                }
+                                                await openai_ws.send(
+                                                    json.dumps(response_create_event)
+                                                )
 
-                                # Send final response
-                                response_create_event = {
-                                    "type": "response.create",
-                                    "response": {
-                                        "modalities": ["text", "audio"],
-                                        "instructions": f"Formulate an answer strictly based on the provided context chunks without adding external knowledge or assumptions. context: {result}. Be concise and friendly.",
-                                    },
-                                }
-                                await openai_ws.send(json.dumps(response_create_event))
-
-                            except Exception as e:
-                                print("Error processing question via Assistant:", e)
-                                await send_conversation_item(
-                                    openai_ws,
-                                    f"Respond to the user with apologetic message. ' apologize, but I'm having trouble processing your request right now. Is there anything else I can help you with?'",
-                                )
+                                    except Exception as e:
+                                        print(
+                                            "Error processing question via Assistant:",
+                                            e,
+                                        )
+                                        await send_conversation_item(
+                                            openai_ws,
+                                            f"Respond to the user with apologetic message. ' apologize, but I'm having trouble processing your request right now. Is there anything else I can help you with?'",
+                                        )
 
                         # Trigger an interruption. Your use case might work better using `input_audio_buffer.speech_stopped`, or combining the two.
                         if response_type == "input_audio_buffer.speech_started":

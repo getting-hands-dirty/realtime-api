@@ -229,15 +229,8 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                             try:
                                 call_id = response.get("call_id")
                                 function_name = response.get("name")
-                                args = (
-                                    json.loads(response.get("arguments", "{}"))
-                                    if "arguments" in response
-                                    else {}
-                                )
+                                args = json.loads(response.get("arguments", "{}"))
 
-                                result = ""
-
-                                # List of different intermediate messages to rotate through
                                 intermediate_messages = [
                                     "I'm processing your request, this will just take a moment...",
                                     "Working on getting that information for you...",
@@ -246,52 +239,54 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     "Processing your request, thank you for your patience...",
                                 ]
 
-                                is_last_response_active = (
-                                    responses[-1]["status"] == "in_progress"
-                                    if responses
-                                    else False
-                                )
-                                print(
-                                    f"responses: {responses}, is_last_response_active: {is_last_response_active}"
-                                )
-
-                                await send_conversation_item(
-                                    openai_ws,
-                                    f"Respond to the user with wait message. {intermediate_messages[0]}",
-                                    is_last_response_active,
-                                )
-
-                                # Start async timer for updating messages
-                                message_index = 1
-                                start_time = time.time()
-
                                 tool_to_invoke = TOOL_MAP.get(function_name)
-                                if tool_to_invoke:
-                                    # If the function call takes longer than 2 seconds, send another intermediate message
-                                    while result == "":
-                                        if time.time() - start_time > 2:
-                                            await send_conversation_item(
-                                                openai_ws,
-                                                f"Respond to the user with wait message. {intermediate_messages[message_index % len(intermediate_messages)]}",
-                                                is_last_response_active,
-                                            )
-                                            message_index += 1
-                                            start_time = time.time()
-
-                                        # Try to get the result
-                                        result = tool_to_invoke(**args)
-
-                                        if result:
-                                            print(
-                                                f"Received function call: {function_name} | {call_id} with args: {args}, {result}"
-                                            )
-                                            break
-
-                                else:
+                                if not tool_to_invoke:
                                     print(
                                         f"Tool '{function_name}' not found in TOOL_MAP."
                                     )
+                                    return
 
+                                message_index = 0
+                                result = None
+
+                                async def send_intermediate_messages():
+                                    nonlocal message_index
+                                    is_last_response_active = (
+                                        responses[-1]["status"] == "in_progress"
+                                        if responses
+                                        else False
+                                    )
+                                    print(
+                                        f"responses: {responses}, is_last_response_active: {is_last_response_active}"
+                                    )
+
+                                    while result is None:
+                                        await asyncio.sleep(2)  # Wait for 2 seconds
+                                        if not result and not is_last_response_active:
+                                            await send_conversation_item(
+                                                openai_ws,
+                                                intermediate_messages[
+                                                    message_index
+                                                    % len(intermediate_messages)
+                                                ],
+                                                is_last_response_active,
+                                            )
+                                            message_index += 1
+
+                                # Run intermediate message sender and tool invocation concurrently
+                                message_task = asyncio.create_task(
+                                    send_intermediate_messages()
+                                )
+                                try:
+                                    result = await asyncio.to_thread(
+                                        tool_to_invoke, **args
+                                    )  # Run in thread
+                                finally:
+                                    message_task.cancel()  # Stop intermediate messages
+
+                                if result:
+                                    print(f"Received function call result: {result}")
+                                    # Send the final response
                                 # Send function output
                                 function_output_event = {
                                     "type": "conversation.item.create",

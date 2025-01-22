@@ -87,7 +87,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
     """Handle WebSocket connections between Twilio and OpenAI."""
     try:
         print("Client connected")
-        TOOL_MAP = {tool.__name__: tool for tool in TOOLS}
+        TOOL_MAP = {tool.name: tool for tool in TOOLS}
         print(f"Current tools: {TOOL_MAP} \n schema: {TOOLS_SCHEMA}")
 
         await websocket.accept()
@@ -269,7 +269,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                             )
                                             try:
                                                 result = await asyncio.to_thread(
-                                                    tool_to_invoke, **args
+                                                    tool_to_invoke.func, **args
                                                 )  # Run in thread
                                             finally:
                                                 message_task.cancel()  # Stop intermediate messages

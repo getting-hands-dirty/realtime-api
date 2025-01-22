@@ -3,7 +3,9 @@ from typing import Optional
 
 import requests
 
-from ..util import tool
+from ..util import convert_to_function
+from langchain_core.tools import tool
+
 
 BASE_URL = os.getenv(
     "TOOLS_API_URL", "https://mock-api-realtime-938786674786.us-central1.run.app"
@@ -115,4 +117,6 @@ def get_inventory_search(
 
 # TOOLS = [get_vehicle_details, get_vector_info, book_appointment]
 TOOLS = [get_inventory_search]
-TOOLS_SCHEMA = [tool.get_schema() for tool in TOOLS]
+TOOLS_SCHEMA = [
+    convert_to_function(tool.args_schema.model_json_schema()) for tool in TOOLS
+]

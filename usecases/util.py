@@ -66,3 +66,35 @@ def tool(func):
 
     wrapper_func.get_schema = get_schema
     return wrapper_func
+
+
+def convert_to_function(input_obj):
+    # Extract necessary fields from the input object
+    description = input_obj.get("description", "")
+    title = input_obj.get("title", "")
+    properties = input_obj.get("properties", {})
+
+    # Build the output properties
+    output_properties = {}
+    for key, value in properties.items():
+        output_properties[key] = {
+            "type": value.get("type", ""),
+            "description": parameter_descriptions.get(key, ""),
+        }
+        # Add enum if default is provided
+        if "default" in value:
+            output_properties[key]["enum"] = value["default"]
+
+    # Create the output structure
+    output = {
+        "type": "function",
+        "name": "get_vector_info",  # Fixed name as per output example
+        "description": description,
+        "parameters": {
+            "type": "object",
+            "properties": output_properties,
+            "required": list(properties.keys()),  # All properties are required
+        },
+    }
+
+    return output

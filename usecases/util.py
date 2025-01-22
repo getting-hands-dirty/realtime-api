@@ -83,7 +83,9 @@ def convert_to_function(input_obj):
         }
         # Add enum if default is provided
         if "default" in value:
-            output_properties[key]["enum"] = value["default"]
+            current_value = value["default"]
+            if current_value is not None:
+                output_properties[key]["enum"] = value["default"]
 
     # Create the output structure
     output = {

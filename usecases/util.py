@@ -90,7 +90,7 @@ def convert_to_function(input_obj):
     # Create the output structure
     output = {
         "type": "function",
-        "name": "get_vector_info",  # Fixed name as per output example
+        "name": title,  # Fixed name as per output example
         "description": description,
         "parameters": {
             "type": "object",

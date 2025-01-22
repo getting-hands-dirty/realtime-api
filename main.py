@@ -244,21 +244,16 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                                 )
 
                                                 while result is None:
-                                                    await asyncio.sleep(
-                                                        2
-                                                    )  # Wait for 2 seconds
+                                                    # Wait for 1 second to see if the result is ready
+                                                    await asyncio.sleep(1)
                                                     if (
                                                         not result
                                                         and not is_last_response_active
                                                     ):
+                                                        current_msg = f"Respond to the user with waiting message to avoid silence: {intermediate_messages[message_index % len(intermediate_messages)]}"
                                                         await send_conversation_item(
                                                             openai_ws,
-                                                            intermediate_messages[
-                                                                message_index
-                                                                % len(
-                                                                    intermediate_messages
-                                                                )
-                                                            ],
+                                                            current_msg,
                                                             is_last_response_active,
                                                         )
                                                         message_index += 1

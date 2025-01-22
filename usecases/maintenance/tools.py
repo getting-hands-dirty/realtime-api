@@ -65,7 +65,9 @@ def get_vector_info(query: str):
 def get_inventory_search(
     vin: str = None,
     stock_number: str = None,
-    vehicle_type: str = [
+    vehicle_type: str = ["New", "Used"],
+    year: int = None,
+    make: str = [
         "Acura",
         "Alfa Romeo",
         "Audi",
@@ -113,8 +115,6 @@ def get_inventory_search(
         "Volkswagen",
         "Volvo",
     ],
-    year: int = None,
-    make: str = ["New", "Used"],
     model: str = [
         "5 Series",
         "2 Series",
@@ -509,7 +509,6 @@ def get_inventory_search(
     ],
     drive_type: str = ["AWD", "RWD", "4WD", "FWD"],
     doors: int = None,
-    description: str = None,
     query: str = None,
 ):
     """
@@ -533,7 +532,7 @@ def get_inventory_search(
         "transmission": transmission,
         "drive_type": drive_type,
         "doors": doors,
-        "description": description,
+        "description": query,
     }
 
     # Filter out None values from query parameters

@@ -64,11 +64,9 @@ def get_vector_info(query: str):
 class InventorySearchModel(BaseModel):
     vin: str = Field(None, description="Vehicle Identification Number.")
     stock_number: str = Field(None, description="Stock number of the vehicle.")
-    vehicle_type: List[str] = Field(
-        enum=["New", "Used"], description="Type of the vehicle."
-    )
+    vehicle_type: str = Field(enum=["New", "Used"], description="Type of the vehicle.")
     year: int = Field(None, description="Manufacturing year of the vehicle.")
-    make: List[str] = Field(
+    make: str = Field(
         enum=[
             "Acura",
             "Alfa Romeo",
@@ -119,7 +117,7 @@ class InventorySearchModel(BaseModel):
         ],
         description="Vehicle manufacturer (e.g., Toyota).",
     )
-    model: List[str] = Field(
+    model: str = Field(
         enum=[
             "5 Series",
             "2 Series",
@@ -186,7 +184,7 @@ class InventorySearchModel(BaseModel):
         ],
         description="Vehicle model (e.g., Corolla).",
     )
-    trim: List[str] = Field(
+    trim: str = Field(
         enum=[
             "530i xDrive",
             "540i xDrive",
@@ -282,7 +280,7 @@ class InventorySearchModel(BaseModel):
         ],
         description="Vehicle trim level.",
     )
-    style: List[str] = Field(
+    style: str = Field(
         enum=[
             "530i xDrive Sedan",
             "540i xDrive Sedan",
@@ -401,7 +399,7 @@ class InventorySearchModel(BaseModel):
         ],
         description="Vehicle body style.",
     )
-    exterior_color: List[str] = Field(
+    exterior_color: str = Field(
         enum=[
             "Mineral White Metallic",
             "Oxide Grey Metallic",
@@ -463,7 +461,7 @@ class InventorySearchModel(BaseModel):
         ],
         description="Exterior color of the vehicle.",
     )
-    interior_color: List[str] = Field(
+    interior_color: str = Field(
         enum=[
             "Black",
             "Mocha",
@@ -522,11 +520,11 @@ class InventorySearchModel(BaseModel):
     min_price: int = Field(None, description="Minimum price range for the vehicle.")
     max_price: int = Field(None, description="Maximum price range for the vehicle.")
     fuel_type: str = Field(None, description="Type of fuel used by the vehicle.")
-    transmission: List[str] = Field(
+    transmission: str = Field(
         enum=["Automatic", "Manual", "CVT", "Other"],
         description="Transmission type.",
     )
-    drive_type: List[str] = Field(
+    drive_type: str = Field(
         enum=["AWD", "RWD", "4WD", "FWD"], description="Drive type."
     )
     doors: int = Field(None, description="Number of doors.")
@@ -534,7 +532,64 @@ class InventorySearchModel(BaseModel):
         None, description="Type of engine (Turbocharged, Hybrid, Electric)."
     )
     features: str = Field(
-        None, description="Specific vehicle feature to search for (e.g., Heated Seats)."
+        enum=[
+            "3rd Row Seat",
+            "Adjustable Pedals",
+            "Alloy Wheels",
+            "Android Auto",
+            "Apple CarPlay",
+            "Auto High-Beam Headlights",
+            "Automatic Climate Control",
+            "Automatic Cruise Control",
+            "Auxiliary Audio Input",
+            "Bed Liner",
+            "Blind Spot Monitor",
+            "Cooled Seats",
+            "Distance Pacing Cruise Control",
+            "Dual Rear Wheels",
+            "DVD / Entertainment",
+            "Emergency Communication System",
+            "Fog Lights",
+            "Forward Collision Warning",
+            "Hands-Free Liftgate",
+            "Heads up Display",
+            "Heated Seats",
+            "Heated Side Mirrors",
+            "Heated Steering Wheel",
+            "Lane Assist",
+            "Lane Departure Warning",
+            "Leather Seats",
+            "LED Headlights",
+            "Memory Seats",
+            "Navigation System",
+            "Night Vision Lights",
+            "Parking Sensors / Assist",
+            "Perimeter/Approach Lights",
+            "Power Seats",
+            "Premium Audio",
+            "Push Button Starting",
+            "Rain Sensing Wipers",
+            "Rear Air Conditioning",
+            "Rear Heated Seats",
+            "Rear Sunshade",
+            "Rearview Camera",
+            "Reverse Sensing System",
+            "Roof Rack",
+            "Running Boards",
+            "Satellite Radio Ready",
+            "Side-Impact Air Bags",
+            "Speed Limit Sign Recognition",
+            "Speed Sensitive Wipers",
+            "Steering Wheel Controls",
+            "Sunroof / Moonroof",
+            "Telescoping Steering Wheel",
+            "Tow Hitch/Tow Package",
+            "Traffic Sign Recognition",
+            "Wifi Hotspot",
+            "Wireless Phone Charging",
+            "Xenon Headlights",
+        ],
+        description="Specific vehicle feature to search for (e.g., Heated Seats).",
     )
     packages: str = Field(
         None,
@@ -562,6 +617,9 @@ def get_inventory_search(
     transmission: str = None,
     drive_type: str = None,
     doors: int = None,
+    engine_type: str = None,
+    features: str = None,
+    packages: str = None,
     query: str = None,
 ):
     """
@@ -585,6 +643,9 @@ def get_inventory_search(
         "transmission": transmission,
         "drive_type": drive_type,
         "doors": doors,
+        "engine_type": engine_type,
+        "features": features,
+        "packages": packages,
         "description": query,
     }
 

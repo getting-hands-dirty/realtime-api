@@ -91,6 +91,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
         print(f"Current tools: {TOOL_MAP} \n schema: {TOOLS_SCHEMA}")
 
         await websocket.accept()
+        responses = []
 
         async with websockets.connect(
             REALTIME_AUDIO_API_URL,
@@ -198,10 +199,39 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                         #         await websocket.send_json(audio_delta)
                         # if response_type == "response.function_call_arguments.done":
 
+                        if response_type == "response.created":
+                            responses.append(
+                                {
+                                    "event_id": response.get("event_id", ""),
+                                    "response_id": response.get("response", {}).get(
+                                        "id", ""
+                                    ),
+                                    "response_status": response.get("response", {}).get(
+                                        "status", ""
+                                    ),
+                                }
+                            )
+
                         if response_type == "response.done":
+                            event_id = response.get("event_id", "")
                             current_response = response.get("response", {})
-                            status = current_response.get("status")
-                            print(f"Received current_response: {current_response}")
+                            response_id = current_response.get("id", "")
+                            status = current_response.get("status", "")
+
+                            # Update the response in the responses list
+                            for resp in responses:
+                                if resp["response_id"] == response_id:
+                                    resp["response_status"] = status
+                                    break
+                            else:
+                                # If response_id not found, add a new response
+                                responses.append(
+                                    {
+                                        "event_id": event_id,
+                                        "response_id": response_id,
+                                        "response_status": status,
+                                    }
+                                )
 
                             if status == "completed":
                                 current_response_output = current_response.get(
@@ -212,7 +242,13 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                     if current_response_output
                                     else None
                                 )
-                                print("Last response result:", last_response_result)
+
+                                print(
+                                    "Log: ",
+                                    current_response,
+                                    last_response_result,
+                                    responses,
+                                )
 
                                 if last_response_result:
                                     try:
@@ -237,9 +273,9 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                             result = None
 
                                             async def send_intermediate_messages():
-                                                nonlocal message_index, result
+                                                nonlocal message_index, result, responses
                                                 is_last_response_active = (
-                                                    last_response_result.get("status")
+                                                    responses[-1]["response_status"]
                                                     == "in_progress"
                                                 )
 
@@ -254,9 +290,10 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                                         await send_conversation_item(
                                                             openai_ws,
                                                             current_msg,
-                                                            True,  # is_last_response_active
+                                                            is_last_response_active,
                                                         )
                                                         message_index += 1
+                                                        break  # Exit the loop after sending the message
 
                                             # Run intermediate message sender and tool invocation concurrently
                                             message_task = asyncio.create_task(

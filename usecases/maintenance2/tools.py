@@ -62,7 +62,10 @@ def get_vector_info(query: str):
 
 
 class InventoryVectorSearchModel(BaseModel):
-    query: str = Field(None, description="Query to search the knowledge base.")
+    query: str = Field(
+        None,
+        description="User's Query to search the knowledge base. Must be a question",
+    )
 
 
 @tool
@@ -74,16 +77,18 @@ def get_vector_info_inventory(query: str):
     headers = {"Content-Type": "application/json"}
     payload = {
         "query": query,
-        "filter": {"topic": "inventory"},
-        "doRerank": True,
-        "doHybridSearch": True,
+        "filter": {},
+        "doRerank": False,
+        "doHybridSearch": False,
         "hybridSearchOptions": {"searchWeight": 0.5, "useEntities": True},
-        "native": True,
+        "native": False,
         "k": 10,
     }
 
     response = requests.post(url, json=payload, headers=headers)
-    return response.text
+    json_response = response.json()
+
+    return str(json_response["context"])
 
 
 schema = StructuredTool.from_function(

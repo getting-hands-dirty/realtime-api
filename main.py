@@ -237,7 +237,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                             result = None
 
                                             async def send_intermediate_messages():
-                                                nonlocal message_index
+                                                nonlocal message_index, result
                                                 is_last_response_active = (
                                                     last_response_result.get("status")
                                                     == "in_progress"
@@ -254,7 +254,7 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                                         await send_conversation_item(
                                                             openai_ws,
                                                             current_msg,
-                                                            is_last_response_active,
+                                                            True,  # is_last_response_active
                                                         )
                                                         message_index += 1
 

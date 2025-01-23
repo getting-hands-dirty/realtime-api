@@ -661,7 +661,26 @@ def get_inventory_search(
 
     # Make the GET request
     response = requests.get(url, params=filtered_params)
-    return response.text
+    # return response.text
+
+    json_response = response.json()
+
+    if "data" in json_response:
+        for vehicle in json_response["data"]:
+            # vehicle.pop("description", None)
+            vehicle.pop("comment1", None)
+            vehicle.pop("comment2", None)
+            vehicle.pop("comment3", None)
+            vehicle.pop("comment4", None)
+            vehicle.pop("comment5", None)
+            vehicle.pop("comment6", None)
+            vehicle.pop("comment7", None)
+            vehicle.pop("option", None)
+
+    if len(json_response["data"]) > 10:
+        json_response["data"] = json_response["data"][:10]
+
+    return json_response["data"]
 
 
 schema = StructuredTool.from_function(

@@ -244,8 +244,8 @@ async def handle_media_stream(websocket: WebSocket, type: str):
                                                 )
 
                                                 while result is None:
-                                                    # Wait for 1 second to see if the result is ready
-                                                    await asyncio.sleep(1)
+                                                    # Wait for 3 second to see if the result is ready
+                                                    await asyncio.sleep(3)
                                                     if (
                                                         not result
                                                         and not is_last_response_active

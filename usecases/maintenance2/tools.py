@@ -88,7 +88,7 @@ def get_vector_info_inventory(query: str):
     response = requests.post(url, json=payload, headers=headers)
     json_response = response.json()
 
-    return str(json_response["context"])
+    return str(json_response["content"])
 
 
 schema = StructuredTool.from_function(

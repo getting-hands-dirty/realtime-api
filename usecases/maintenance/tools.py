@@ -182,7 +182,7 @@ class InventorySearchModel(BaseModel):
             "X5 M",
             "Z4",
         ],
-        description="Vehicle model (e.g., Corolla).",
+        description="Vehicle model (e.g., X5, X1).",
     )
     trim: str = Field(
         enum=[
@@ -278,7 +278,7 @@ class InventorySearchModel(BaseModel):
             "M850i",
             "M340i",
         ],
-        description="Vehicle trim level.",
+        description="Vehicle trim level. Sometimes Refers to the version of the vehicle (e.g., xDrive).",
     )
     style: str = Field(
         enum=[

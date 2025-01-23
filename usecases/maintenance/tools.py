@@ -663,22 +663,27 @@ def get_inventory_search(
     response = requests.get(url, params=filtered_params)
     # return response.text
 
+    limit = 100
+    columns_to_remove = [
+        "comment1",
+        "comment2",
+        "comment3",
+        "comment4",
+        "comment5",
+        "comment6",
+        "comment7",
+        # "options",
+    ]
+
     json_response = response.json()
 
     if "data" in json_response:
         for vehicle in json_response["data"]:
-            # vehicle.pop("description", None)
-            vehicle.pop("comment1", None)
-            vehicle.pop("comment2", None)
-            vehicle.pop("comment3", None)
-            vehicle.pop("comment4", None)
-            vehicle.pop("comment5", None)
-            vehicle.pop("comment6", None)
-            vehicle.pop("comment7", None)
-            vehicle.pop("options", None)
+            for column in columns_to_remove:
+                vehicle.pop(column, None)
 
-    if len(json_response["data"]) > 10:
-        json_response["data"] = json_response["data"][:10]
+    if len(json_response["data"]) > limit:
+        json_response["data"] = json_response["data"][:limit]
 
     return str(json_response["data"])
 

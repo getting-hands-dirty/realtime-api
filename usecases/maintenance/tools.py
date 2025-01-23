@@ -675,12 +675,12 @@ def get_inventory_search(
             vehicle.pop("comment5", None)
             vehicle.pop("comment6", None)
             vehicle.pop("comment7", None)
-            vehicle.pop("option", None)
+            vehicle.pop("options", None)
 
     if len(json_response["data"]) > 10:
         json_response["data"] = json_response["data"][:10]
 
-    return json_response["data"]
+    return str(json_response["data"])
 
 
 schema = StructuredTool.from_function(

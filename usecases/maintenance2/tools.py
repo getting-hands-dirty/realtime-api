@@ -2,8 +2,10 @@ import os
 from typing import Optional
 
 import requests
+from langchain_core.tools import StructuredTool, tool
+from pydantic import BaseModel, Field
 
-from ..util import tool
+from usecases.util import convert_to_function
 
 BASE_URL = os.getenv(
     "TOOLS_API_URL", "https://mock-api-realtime-938786674786.us-central1.run.app"
@@ -59,6 +61,10 @@ def get_vector_info(query: str):
     return response.text
 
 
+class InventoryVectorSearchModel(BaseModel):
+    query: str = Field(None, description="Query to search the knowledge base.")
+
+
 @tool
 def get_vector_info_inventory(query: str):
     """
@@ -69,6 +75,9 @@ def get_vector_info_inventory(query: str):
     payload = {
         "query": query,
         "filter": {"topic": "inventory"},
+        "doRerank": True,
+        "doHybridSearch": True,
+        "hybridSearchOptions": {"searchWeight": 0.5, "useEntities": True},
         "native": True,
         "k": 10,
     }
@@ -77,6 +86,13 @@ def get_vector_info_inventory(query: str):
     return response.text
 
 
-# TOOLS = [get_vehicle_details, get_vector_info, book_appointment]
+schema = StructuredTool.from_function(
+    func=get_vector_info_inventory,
+    name="get_vector_info_inventory",
+    description="Query the knowledge base for vehicle inventory information. VIN, StockNumber, Type, Make, Model, Year, etc will be returned.",
+    args_schema=InventoryVectorSearchModel,
+    return_direct=True,
+)
+
 TOOLS = [get_vector_info_inventory]
-TOOLS_SCHEMA = [tool.get_schema() for tool in TOOLS]
+TOOLS_SCHEMA = [convert_to_function(schema)]

@@ -672,6 +672,5 @@ schema = StructuredTool.from_function(
     return_direct=True,
 )
 
-# TOOLS = [get_vehicle_details, get_vector_info, book_appointment]
 TOOLS = [get_inventory_search]
 TOOLS_SCHEMA = [convert_to_function(schema)]

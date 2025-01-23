@@ -1,5 +1,5 @@
+import json
 import os
-from typing import List
 
 import requests
 from langchain_core.tools import StructuredTool, tool
@@ -659,11 +659,15 @@ def get_inventory_search(
     full_url = requests.Request("GET", url, params=filtered_params).prepare().url
     print(f"Invoked URL: {full_url}")
 
+    # Function to estimate token count (simplified)
+    def estimate_token_count(text):
+        return len(text.split())
+
     # Make the GET request
     response = requests.get(url, params=filtered_params)
-    # return response.text
 
     limit = 100
+    context_limit = 120000
     columns_to_remove = [
         "comment1",
         "comment2",
@@ -677,15 +681,36 @@ def get_inventory_search(
 
     json_response = response.json()
 
+    # Store the original data to be returned if the token limit is exceeded
+    original_data = json_response.get("data", [])
+
+    # If the JSON response contains data, proceed with processing
     if "data" in json_response:
+        # Remove unwanted columns
         for vehicle in json_response["data"]:
             for column in columns_to_remove:
                 vehicle.pop(column, None)
 
-    if len(json_response["data"]) > limit:
-        json_response["data"] = json_response["data"][:limit]
+    # Variables for keeping track of token count
+    current_token_count = 0
+    valid_data = []
 
-    return str(json_response["data"])
+    # Iterate through the rows one by one
+    for vehicle in json_response.get("data", []):
+        # Convert the current row (vehicle) to a string for token estimation
+        vehicle_str = json.dumps(vehicle)  # Convert the row to a string representation
+        vehicle_token_count = estimate_token_count(vehicle_str)
+
+        # Check if adding this row exceeds the token count
+        if current_token_count + vehicle_token_count <= context_limit:
+            valid_data.append(vehicle)  # Add the current row to the valid data
+            current_token_count += vehicle_token_count  # Update token count
+        else:
+            # Once we exceed the limit, break and return the valid data up until this point
+            break
+
+    # If we reached the context limit, return the data up until that point, otherwise return all valid data
+    return str(valid_data)
 
 
 schema = StructuredTool.from_function(

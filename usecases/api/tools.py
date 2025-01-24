@@ -627,7 +627,7 @@ def get_inventory_search(
         "features": features,
         "packages": packages,
         "description": description,
-        "fields": fields,
+        "fields": fields if enable_fields else None,
         "options": options,
         "context_limit": context_limit,
     }

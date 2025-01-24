@@ -66,3 +66,38 @@ def tool(func):
 
     wrapper_func.get_schema = get_schema
     return wrapper_func
+
+
+def convert_to_function(schema):
+    # Extract necessary fields from the input object
+    input_obj = schema.args_schema.model_json_schema()
+    title = schema.name
+    description = schema.description
+    properties = input_obj.get("properties", {})
+
+    # Build the output properties
+    output_properties = {}
+    for key, value in properties.items():
+        output_properties[key] = {
+            "type": value.get("type", ""),
+            "description": value.get("description", ""),
+        }
+        # Add enum if default is provided
+        if "enum" in value:
+            current_value = value["enum"]
+            if current_value is not None:
+                output_properties[key]["enum"] = current_value
+
+    # Create the output structure
+    output = {
+        "type": "function",
+        "name": title,  # Fixed name as per output example
+        "description": description,
+        "parameters": {
+            "type": "object",
+            "properties": output_properties,
+            "required": list(properties.keys()),  # All properties are required
+        },
+    }
+
+    return output

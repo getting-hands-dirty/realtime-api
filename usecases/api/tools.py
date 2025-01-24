@@ -627,18 +627,20 @@ def get_inventory_search(
         "features": features,
         "packages": packages,
         "description": description,
-        "fields": fields if enable_fields else None,
+        "fields": fields if enable_fields else None,  # Include fields only if enabled
         "options": options,
         "context_limit": context_limit,
     }
 
-    # Filter out None values from query parameters
+    # Filter out None values
     filtered_params = {k: v for k, v in query_params.items() if v is not None}
+
+    # Debugging print statements
+    print(f"enable_fields: {enable_fields} | fields: {fields}")
+    print(f"Filtered parameters: {filtered_params}")
 
     # Construct the URL with query parameters
     url = f"{BASE_URL}/search"
-
-    # Print the full URL with query parameters
     full_url = requests.Request("GET", url, params=filtered_params).prepare().url
     print(f"Invoked URL: {full_url}")
 

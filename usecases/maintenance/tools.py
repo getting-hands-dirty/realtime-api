@@ -599,6 +599,8 @@ def get_inventory_search(
     description: str = None,
     fields: str = None,
     options: str = None,
+    enable_fields: bool = False,
+    context_limit: int = None,
 ):
     """
     Search the database for vehicle inventory information. VIN, StockNumber, Type, Make, Model, Year, etc., will be returned.
@@ -627,6 +629,7 @@ def get_inventory_search(
         "description": description,
         "fields": fields,
         "options": options,
+        "context_limit": context_limit,
     }
 
     # Filter out None values from query parameters

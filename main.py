@@ -66,8 +66,22 @@ async def index_page():
     return {"message": INTRO}
 
 
-@app.api_route("/incoming-call/{type}", methods=["GET", "POST"])
-async def handle_incoming_call(request: Request, type: str):
+@app.api_route("/incoming-call", methods=["GET", "POST"])
+async def handle_incoming_call(
+    request: Request,
+    # common
+    type: str = "rag",
+    intermediate: bool = False,
+    # rag
+    db: str = "pg",
+    re_rank: bool = False,
+    hybrid_search: bool = False,
+    hybrid_search_weight: float = 0.5,
+    top_k: int = 10,
+    # api
+    enable_fields: bool = False,
+    context_limit: int = 6000,
+):
     """Handle incoming call and return TwiML response to connect to Media Stream."""
     response = VoiceResponse()
     load_metadata(type)
@@ -77,13 +91,29 @@ async def handle_incoming_call(request: Request, type: str):
         response.pause(length=1)
     host = request.url.hostname
     connect = Connect()
-    connect.stream(url=f"wss://{host}/media-stream/{type}")
+    connect.stream(
+        url=f"wss://{host}/media-stream?type={type}&intermediate={intermediate}&db={db}&re_rank={re_rank}&hybrid_search={hybrid_search}&hybrid_search_weight={hybrid_search_weight}&top_k={top_k}&enable_fields={enable_fields}&context_limit={context_limit}"
+    )
     response.append(connect)
     return HTMLResponse(content=str(response), media_type="application/xml")
 
 
-@app.websocket("/media-stream/{type}")
-async def handle_media_stream(websocket: WebSocket, type: str):
+@app.websocket("/media-stream")
+async def handle_media_stream(
+    websocket: WebSocket,
+    # common
+    type: str = "rag",
+    intermediate: bool = False,
+    # rag
+    db: str = "pg",
+    re_rank: bool = False,
+    hybrid_search: bool = False,
+    hybrid_search_weight: float = 0.5,
+    top_k: int = 10,
+    # api
+    enable_fields: bool = False,
+    context_limit: int = 6000,
+):
     """Handle WebSocket connections between Twilio and OpenAI."""
     try:
         print("Client connected")
@@ -274,35 +304,57 @@ async def handle_media_stream(websocket: WebSocket, type: str):
 
                                             async def send_intermediate_messages():
                                                 nonlocal message_index, result, responses
-                                                is_last_response_active = (
-                                                    responses[-1]["response_status"]
-                                                    == "in_progress"
-                                                )
+                                                if intermediate:
+                                                    is_last_response_active = (
+                                                        responses[-1]["response_status"]
+                                                        == "in_progress"
+                                                    )
+                                                    print(
+                                                        f"Intermediate messages enabled. {is_last_response_active}"
+                                                    )
 
-                                                while result is None:
-                                                    # Wait for 3 second to see if the result is ready
-                                                    await asyncio.sleep(3)
-                                                    if (
-                                                        not result
-                                                        and not is_last_response_active
-                                                    ):
-                                                        current_msg = f"Respond to the user with waiting message to avoid silence: {intermediate_messages[message_index % len(intermediate_messages)]}"
-                                                        await send_conversation_item(
-                                                            openai_ws,
-                                                            current_msg,
-                                                            is_last_response_active,
-                                                        )
-                                                        message_index += 1
-                                                        break  # Exit the loop after sending the message
+                                                    while result is None:
+                                                        # Wait for 3 second to see if the result is ready
+                                                        await asyncio.sleep(3)
+                                                        if (
+                                                            not result
+                                                            and not is_last_response_active
+                                                        ):
+                                                            current_msg = f"Respond to the user with waiting message to avoid silence: {intermediate_messages[message_index % len(intermediate_messages)]}"
+                                                            await send_conversation_item(
+                                                                openai_ws,
+                                                                current_msg,
+                                                                is_last_response_active,
+                                                            )
+                                                            message_index += 1
+                                                            break  # Exit the loop after sending the message
 
                                             # Run intermediate message sender and tool invocation concurrently
                                             message_task = asyncio.create_task(
                                                 send_intermediate_messages()
                                             )
                                             try:
+                                                if type == "rag":
+                                                    args["db"] = db
+                                                    args["re_rank"] = re_rank
+                                                    args["hybrid_search"] = (
+                                                        hybrid_search
+                                                    )
+                                                    args["hybrid_search_weight"] = (
+                                                        hybrid_search_weight
+                                                    )
+                                                    args["top_k"] = top_k
+                                                elif type == "api":
+                                                    args["enable_fields"] = (
+                                                        enable_fields
+                                                    )
+                                                    args["context_limit"] = (
+                                                        context_limit
+                                                    )
+                                                print("Args to invoke tool:", args)
                                                 result = await asyncio.to_thread(
                                                     tool_to_invoke.func, **args
-                                                )  # Run in thread
+                                                )
                                             finally:
                                                 message_task.cancel()  # Stop intermediate messages
 

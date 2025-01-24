@@ -69,7 +69,15 @@ class InventoryVectorSearchModel(BaseModel):
 
 
 @tool
-def get_vector_info_inventory(query: str):
+def get_vector_info_inventory(
+    query: str,
+    re_rank: bool = False,
+    hybrid_search: bool = False,
+    hybrid_search_weight: float = 0.5,
+    native: bool = False,
+    top_k: int = 10,
+    db: str = "pg",
+):
     """
     Query the knowledge base for vehicle inventory information. VIN, StockNumber, Type, Make, Model, Year, etc will be returned.
     """
@@ -78,14 +86,16 @@ def get_vector_info_inventory(query: str):
     payload = {
         "query": query,
         "filter": {},
-        "doRerank": False,
-        "doHybridSearch": False,
-        "hybridSearchOptions": {"searchWeight": 0.5, "useEntities": True},
-        "native": False,
-        "k": 10,
+        "doRerank": re_rank,
+        "doHybridSearch": hybrid_search,
+        "hybridSearchOptions": {"searchWeight": hybrid_search_weight},
+        "native": native,
+        "k": top_k,
+        "db": db,
     }
 
     response = requests.post(url, json=payload, headers=headers)
+    print("RAG Payload: ", payload)
 
     return str(response.text)
 

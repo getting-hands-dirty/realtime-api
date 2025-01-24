@@ -560,7 +560,18 @@ class InventorySearchModel(BaseModel):
         None,
         description="Specific vehicle package to search for (e.g., Premium Package, M Sport Package).",
     )
-    query: str = Field(None, description="Generic search across multiple fields.")
+    fields: str = Field(
+        None,
+        description="The fields required to search the inventory (e.g., make, model, description, options, packages, features and all other fields) The fields must be picked based on the context of the user query and the information required to fulfill the user request.",
+    )
+    options: str = Field(
+        None,
+        description="Contains vehicle options and additional details about packages and features of the vehicle",
+    )
+    description: str = Field(
+        None,
+        description="Contains details related to the test drive, and general sales and service information.",
+    )
 
 
 @tool
@@ -585,7 +596,9 @@ def get_inventory_search(
     engine_type: str = None,
     features: str = None,
     packages: str = None,
-    query: str = None,
+    description: str = None,
+    fields: str = None,
+    options: str = None,
 ):
     """
     Search the database for vehicle inventory information. VIN, StockNumber, Type, Make, Model, Year, etc., will be returned.
@@ -611,7 +624,9 @@ def get_inventory_search(
         "engine_type": engine_type,
         "features": features,
         "packages": packages,
-        "description": query,
+        "description": description,
+        "fields": fields,
+        "options": options,
     }
 
     # Filter out None values from query parameters
@@ -624,58 +639,10 @@ def get_inventory_search(
     full_url = requests.Request("GET", url, params=filtered_params).prepare().url
     print(f"Invoked URL: {full_url}")
 
-    # Function to estimate token count (simplified)
-    def estimate_token_count(text):
-        return len(text.split())
-
     # Make the GET request
     response = requests.get(url, params=filtered_params)
-
-    limit = 100
-    context_limit = 120000
-    columns_to_remove = [
-        "comment1",
-        "comment2",
-        "comment3",
-        "comment4",
-        "comment5",
-        "comment6",
-        "comment7",
-        # "options",
-    ]
-
     json_response = response.json()
-
-    # Store the original data to be returned if the token limit is exceeded
-    original_data = json_response.get("data", [])
-
-    # If the JSON response contains data, proceed with processing
-    if "data" in json_response:
-        # Remove unwanted columns
-        for vehicle in json_response["data"]:
-            for column in columns_to_remove:
-                vehicle.pop(column, None)
-
-    # Variables for keeping track of token count
-    current_token_count = 0
-    valid_data = []
-
-    # Iterate through the rows one by one
-    for vehicle in json_response.get("data", []):
-        # Convert the current row (vehicle) to a string for token estimation
-        vehicle_str = json.dumps(vehicle)  # Convert the row to a string representation
-        vehicle_token_count = estimate_token_count(vehicle_str)
-
-        # Check if adding this row exceeds the token count
-        if current_token_count + vehicle_token_count <= context_limit:
-            valid_data.append(vehicle)  # Add the current row to the valid data
-            current_token_count += vehicle_token_count  # Update token count
-        else:
-            # Once we exceed the limit, break and return the valid data up until this point
-            break
-
-    # If we reached the context limit, return the data up until that point, otherwise return all valid data
-    return str(valid_data)
+    return str(json_response["data"])
 
 
 schema = StructuredTool.from_function(

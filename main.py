@@ -116,7 +116,9 @@ async def handle_media_stream(
 ):
     """Handle WebSocket connections between Twilio and OpenAI."""
     try:
-        print("Client connected")
+        print(
+            f"Client connected with params. type: {type}, intermediate: {intermediate}, db: {db}, re_rank: {re_rank}, hybrid_search: {hybrid_search}, hybrid_search_weight: {hybrid_search_weight}, top_k: {top_k}, enable_fields: {enable_fields}, context_limit: {context_limit}"
+        )
         TOOL_MAP = {tool.name: tool for tool in TOOLS}
         print(f"Current tools: {TOOL_MAP} \n schema: {TOOLS_SCHEMA}")
 

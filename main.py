@@ -126,21 +126,7 @@ async def handle_incoming_call(
 
 
 @app.websocket("/media-stream")
-async def handle_media_stream(
-    websocket: WebSocket,
-    # common
-    type: str = "rag",
-    intermediate: bool = False,
-    # rag
-    db: str = "pg",
-    re_rank: bool = False,
-    hybrid_search: bool = False,
-    hybrid_search_weight: float = 0.5,
-    top_k: int = 10,
-    # api
-    enable_fields: bool = False,
-    context_limit: int = 6000,
-):
+async def handle_media_stream(websocket: WebSocket):
     """Handle WebSocket connections between Twilio and OpenAI."""
     try:
         print(
@@ -333,7 +319,7 @@ async def handle_media_stream(
 
                                             async def send_intermediate_messages():
                                                 nonlocal message_index, result, responses
-                                                if intermediate:
+                                                if PARAM_INTERMEDIATE:
                                                     is_last_response_active = (
                                                         responses[-1]["response_status"]
                                                         == "in_progress"
@@ -364,21 +350,21 @@ async def handle_media_stream(
                                             )
                                             try:
                                                 if type == "rag":
-                                                    args["db"] = db
-                                                    args["re_rank"] = re_rank
+                                                    args["db"] = PARAM_DB
+                                                    args["re_rank"] = PARAM_RE_RANK
                                                     args["hybrid_search"] = (
-                                                        hybrid_search
+                                                        PARAM_HYBRID_SEARCH
                                                     )
                                                     args["hybrid_search_weight"] = (
-                                                        hybrid_search_weight
+                                                        PARAM_HYBRID_SEARCH_WEIGHT
                                                     )
-                                                    args["top_k"] = top_k
+                                                    args["top_k"] = PARAM_TOP_K
                                                 elif type == "api":
                                                     args["enable_fields"] = (
-                                                        enable_fields
+                                                        PARAM_ENABLE_FIELDS
                                                     )
                                                     args["context_limit"] = (
-                                                        context_limit
+                                                        PARAM_CONTEXT_LIMIT
                                                     )
                                                 print("Args to invoke tool:", args)
                                                 result = await asyncio.to_thread(

@@ -62,7 +62,7 @@ app = FastAPI()
 
 @app.get("/", response_class=JSONResponse)
 async def index_page():
-    load_metadata("maintenance")
+    load_metadata("rag")
     return {"message": INTRO}
 
 

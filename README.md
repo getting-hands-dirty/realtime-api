@@ -84,3 +84,19 @@ To route incoming calls to your specific use case webhook:
 For detailed instructions, refer to Twilio's official documentation on [Configuring Webhooks for Incoming Calls](https://www.twilio.com/docs/voice/tutorials/how-to-respond-to-incoming-phone-calls-node-js#configure-your-webhook-url).
 
 *Note*: Ensure your webhook URL is publicly accessible and uses HTTPS for secure communication.
+
+
+
+
+* common
+type: str = "rag", // "api"
+intermediate: bool = False, // True
+* rag
+db: str = "pg", // "faiss"
+re_rank: bool = False,
+hybrid_search: bool = False,
+hybrid_search_weight: float = 0.5,
+top_k: int = 10,
+* api
+enable_fields: bool = False,
+context_limit: int = 6000, 

@@ -4,7 +4,6 @@ import importlib
 import json
 import os
 import ssl
-import time
 
 import websockets
 from dotenv import load_dotenv
@@ -53,6 +52,16 @@ ADVANCED_SETTINGS = {}
 TOOLS_SCHEMA = []
 TOOLS = []
 
+PARAM_TYPE = ""
+PARAM_INTERMEDIATE = False
+PARAM_DB = ""
+PARAM_RE_RANK = False
+PARAM_HYBRID_SEARCH = False
+PARAM_HYBRID_SEARCH_WEIGHT = 0
+PARAM_TOP_K = 0
+PARAM_ENABLE_FIELDS = False
+PARAM_CONTEXT_LIMIT = 0
+
 
 if not OPENAI_API_KEY:
     raise ValueError("Missing the OpenAI API key. Please set it in the .env file.")
@@ -62,7 +71,17 @@ app = FastAPI()
 
 @app.get("/", response_class=JSONResponse)
 async def index_page():
-    load_metadata("rag")
+    load_metadata(
+        type="rag",
+        intermediate=False,
+        db="pg",
+        re_rank=False,
+        hybrid_search=False,
+        hybrid_search_weight=0.5,
+        top_k=10,
+        enable_fields=False,
+        context_limit=6000,
+    )
     return {"message": INTRO}
 
 
@@ -84,16 +103,24 @@ async def handle_incoming_call(
 ):
     """Handle incoming call and return TwiML response to connect to Media Stream."""
     response = VoiceResponse()
-    load_metadata(type)
+    load_metadata(
+        type,
+        intermediate,
+        db,
+        re_rank,
+        hybrid_search,
+        hybrid_search_weight,
+        top_k,
+        enable_fields,
+        context_limit,
+    )
     # <Say> punctuation to improve text-to-speech flow
     if INTRO:
         response.say(INTRO)
         response.pause(length=1)
     host = request.url.hostname
     connect = Connect()
-    connect.stream(
-        url=f"wss://{host}/media-stream?type={type}&intermediate={intermediate}&db={db}&re_rank={re_rank}&hybrid_search={hybrid_search}&hybrid_search_weight={hybrid_search_weight}&top_k={top_k}&enable_fields={enable_fields}&context_limit={context_limit}"
-    )
+    connect.stream(url=f"wss://{host}/media-stream")
     response.append(connect)
     return HTMLResponse(content=str(response), media_type="application/xml")
 
@@ -117,7 +144,7 @@ async def handle_media_stream(
     """Handle WebSocket connections between Twilio and OpenAI."""
     try:
         print(
-            f"Client connected with params. type: {type}, intermediate: {intermediate}, db: {db}, re_rank: {re_rank}, hybrid_search: {hybrid_search}, hybrid_search_weight: {hybrid_search_weight}, top_k: {top_k}, enable_fields: {enable_fields}, context_limit: {context_limit}"
+            f"Client connected with params. type: {PARAM_TYPE}, intermediate: {PARAM_INTERMEDIATE}, db: {PARAM_DB}, re_rank: {PARAM_RE_RANK}, hybrid_search: {PARAM_HYBRID_SEARCH}, hybrid_search_weight: {PARAM_HYBRID_SEARCH_WEIGHT}, top_k: {PARAM_TOP_K}, enable_fields: {PARAM_ENABLE_FIELDS}, context_limit: {PARAM_CONTEXT_LIMIT}"
         )
         TOOL_MAP = {tool.name: tool for tool in TOOLS}
         print(f"Current tools: {TOOL_MAP} \n schema: {TOOLS_SCHEMA}")
@@ -469,7 +496,17 @@ async def handle_media_stream(
         await websocket.close()
 
 
-def load_metadata(type: str):
+def load_metadata(
+    type,
+    intermediate,
+    db,
+    re_rank,
+    hybrid_search,
+    hybrid_search_weight,
+    top_k,
+    enable_fields,
+    context_limit,
+):
     module_name = f"usecases.{type}.config"
     module = importlib.import_module(module_name)
 
@@ -480,6 +517,15 @@ def load_metadata(type: str):
     global ADVANCED_SETTINGS
     global TOOLS_SCHEMA
     global TOOLS
+    global PARAM_TYPE
+    global PARAM_INTERMEDIATE
+    global PARAM_DB
+    global PARAM_RE_RANK
+    global PARAM_HYBRID_SEARCH
+    global PARAM_HYBRID_SEARCH_WEIGHT
+    global PARAM_TOP_K
+    global PARAM_ENABLE_FIELDS
+    global PARAM_CONTEXT_LIMIT
 
     INTRO = module.INTRO_TEXT
     INSTRUCTIONS = module.SYSTEM_INSTRUCTIONS
@@ -488,6 +534,15 @@ def load_metadata(type: str):
     ADVANCED_SETTINGS = module.ADVANCED_SETTINGS
     TOOLS_SCHEMA = module.TOOLS_SCHEMA
     TOOLS = module.TOOLS
+    PARAM_TYPE = type
+    PARAM_INTERMEDIATE = intermediate
+    PARAM_DB = db
+    PARAM_RE_RANK = re_rank
+    PARAM_HYBRID_SEARCH = hybrid_search
+    PARAM_HYBRID_SEARCH_WEIGHT = hybrid_search_weight
+    PARAM_TOP_K = top_k
+    PARAM_ENABLE_FIELDS = enable_fields
+    PARAM_CONTEXT_LIMIT = context_limit
 
 
 async def send_conversation_item(ws, text, is_last_response_active=False):

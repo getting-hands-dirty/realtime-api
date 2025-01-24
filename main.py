@@ -349,7 +349,7 @@ async def handle_media_stream(websocket: WebSocket):
                                                 send_intermediate_messages()
                                             )
                                             try:
-                                                if type == "rag":
+                                                if PARAM_TYPE == "rag":
                                                     args["db"] = PARAM_DB
                                                     args["re_rank"] = PARAM_RE_RANK
                                                     args["hybrid_search"] = (
@@ -359,7 +359,7 @@ async def handle_media_stream(websocket: WebSocket):
                                                         PARAM_HYBRID_SEARCH_WEIGHT
                                                     )
                                                     args["top_k"] = PARAM_TOP_K
-                                                elif type == "api":
+                                                elif PARAM_TYPE == "api":
                                                     args["enable_fields"] = (
                                                         PARAM_ENABLE_FIELDS
                                                     )

@@ -1,4 +1,3 @@
-import json
 import os
 
 import requests
@@ -11,21 +10,33 @@ BASE_URL = os.getenv(
     "TOOLS_API_URL", "https://mock-api-realtime-938786674786.us-central1.run.app"
 )
 
+# ---------------------------
+# Book Appointment Tool
+# ---------------------------
+
+
+class BookAppointmentModel(BaseModel):
+    customer_name: str = Field(None, description="Customer Name.")
+    vehicle_details: str = Field(None, description="Vehicle Details.")
+    date: str = Field(None, description="Appointment date.")
+    time: str = Field(None, description="Appointment time.")
+    service: str = Field(None, description="Service type.")
+
 
 @tool
 def book_appointment(
-    customer_id: str, vehicle_id: str, date: str, time: str, service: str
+    customer_name: str, vehicle_details: str, date: str, time: str, service: str
 ):
     """
     Book an appointment for a vehicle service, get all the details from the user to book the appointment.
     These details should be gathered from the user before invoking this tool.
-    Customer ID, Vehicle ID, Date, Time, and Service.
+    Customer Name, Vehicle Details, Date, Time, and Service.
     """
     url = f"{BASE_URL}/book-appointment"
     headers = {"Content-Type": "application/json"}
     payload = {
-        "customer_id": customer_id,
-        "vehicle_id": vehicle_id,
+        "customer_name": customer_name,
+        "vehicle_details": vehicle_details,
         "date": date,
         "time": time,
         "service": service,
@@ -34,31 +45,76 @@ def book_appointment(
     return response.text
 
 
-@tool
-def get_vehicle_details(vehicle_id: str):
-    """
-    Retrieve details of a vehicle by its ID. This should be invoked when vehicle details requested by user.
-    """
-    url = f"{BASE_URL}/vehicle/{vehicle_id}"
-    response = requests.get(url)
-    return response.text
+book_appointment_schema = StructuredTool.from_function(
+    func=book_appointment,
+    name="book_appointment",
+    description="""
+    Book an appointment for a vehicle service, get all the details from the user to book the appointment.
+    These details should be gathered from the user before invoking this tool.
+    Customer Name, Vehicle Details, Date, Time, and Service.
+    """,
+    args_schema=BookAppointmentModel,
+    return_direct=True,
+)
+
+# -------------------------
+# Get Booking Details Tool
+# -------------------------
+
+
+class AppointmentDetails(BaseModel):
+    query: str = Field(
+        None,
+        description="User's Query about the booked appointment. Must be a question",
+    )
 
 
 @tool
-def get_vector_info(query: str):
+def get_appointment_details(
+    query: str,
+    re_rank: bool = False,
+    hybrid_search: bool = False,
+    hybrid_search_weight: float = 0.5,
+    native: bool = False,
+    top_k: int = 10,
+    db: str = "pg",
+):
     """
-    Query the knowledge base for general information, such as customer details, maintenance details and any other information.
+    Query the knowledge base for questions about the booked appointment.
     """
     url = f"{BASE_URL}/vector-info"
     headers = {"Content-Type": "application/json"}
     payload = {
         "query": query,
-        "filter": {"topic": "maintenance"},
-        "native": True,
+        "filter": {
+            "topic": "maintenance",
+        },
+        "doRerank": re_rank,
+        "doHybridSearch": hybrid_search,
+        "hybridSearchOptions": {"searchWeight": hybrid_search_weight},
+        "native": native,
+        "k": top_k,
+        "db": db,
     }
 
     response = requests.post(url, json=payload, headers=headers)
-    return response.text
+    print("RAG Payload: ", payload)
+
+    return str(response.text)
+
+
+get_appointment_details_schema = StructuredTool.from_function(
+    func=get_appointment_details,
+    name="get_appointment_details",
+    description="Query the knowledge base for questions about the booked appointment.",
+    args_schema=AppointmentDetails,
+    return_direct=True,
+)
+
+
+# ---------------------------
+# Inventory Search Tool
+# ---------------------------
 
 
 class InventorySearchModel(BaseModel):
@@ -650,7 +706,7 @@ def get_inventory_search(
     return str(json_response["data"])
 
 
-schema = StructuredTool.from_function(
+get_inventory_search_schema = StructuredTool.from_function(
     func=get_inventory_search,
     name="get_inventory_search",
     description="Search the database for vehicle inventory information. VIN, StockNumber, Type, Make, Model, Year, etc., will be returned.",
@@ -658,5 +714,13 @@ schema = StructuredTool.from_function(
     return_direct=True,
 )
 
-TOOLS = [get_inventory_search]
-TOOLS_SCHEMA = [convert_to_function(schema)]
+# ---------------------------
+# Exported Tools
+# ---------------------------
+
+TOOLS = [get_inventory_search, book_appointment, get_appointment_details]
+TOOLS_SCHEMA = [
+    convert_to_function(book_appointment_schema),
+    convert_to_function(get_inventory_search_schema),
+    convert_to_function(get_appointment_details_schema),
+]

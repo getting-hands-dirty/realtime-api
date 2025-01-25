@@ -25,7 +25,13 @@ class BookAppointmentModel(BaseModel):
 
 @tool
 def book_appointment(
-    customer_name: str, vehicle_details: str, date: str, time: str, service: str
+    customer_name: str,
+    vehicle_details: str,
+    date: str,
+    time: str,
+    service: str,
+    enable_fields: bool = False,  # Not used
+    context_limit: int = None,  # Not used
 ):
     """
     Book an appointment for a vehicle service, get all the details from the user to book the appointment.
@@ -78,6 +84,8 @@ def get_appointment_details(
     native: bool = False,
     top_k: int = 10,
     db: str = "pg",
+    enable_fields: bool = False,  # Not used
+    context_limit: int = None,  # Not used
 ):
     """
     Query the knowledge base for questions about the booked appointment.

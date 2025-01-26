@@ -1,6 +1,6 @@
 from .tools import *
 
-VOICE = "sage"  # alloy, ash, ballad, coral, echo, sage, shimmer, verse
+VOICE = "alloy"  # alloy, ash, ballad, coral, echo, sage, shimmer, verse
 
 ADVANCED_SETTINGS = {
     "turn_detection": {"type": "server_vad"},

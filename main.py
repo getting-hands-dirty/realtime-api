@@ -368,8 +368,14 @@ async def handle_media_stream(websocket: WebSocket):
                                                         PARAM_CONTEXT_LIMIT
                                                     )
                                                 print("Args to invoke tool:", args)
-
-                                                voice_response.enqueue()
+                                                
+                                                audio_delta_intermediate = {
+                                                    "event": "media",
+                                                    "streamSid": stream_sid,
+                                                    "media": {"payload": INTERMEDIATE_AUDIO},
+                                                }
+                                                await websocket.send_json(audio_delta_intermediate)
+                                                
                                                 result = await asyncio.to_thread(
                                                     tool_to_invoke.func, **args
                                                 )
@@ -404,7 +410,12 @@ async def handle_media_stream(websocket: WebSocket):
                                                 await openai_ws.send(
                                                     json.dumps(response_create_event)
                                                 )
-                                                voice_response.dial()
+
+                                                await websocket.send_json(
+                                                    {"event": "clear", "streamSid": stream_sid}
+                                                )
+                                                
+                                                
                                     except Exception as e:
                                         print(
                                             "Error processing question via Assistant:",
@@ -515,6 +526,7 @@ def load_metadata(
     global PARAM_TOP_K
     global PARAM_ENABLE_FIELDS
     global PARAM_CONTEXT_LIMIT
+    global INTERMEDIATE_AUDIO
 
     INTRO = module.INTRO_TEXT
     INSTRUCTIONS = module.SYSTEM_INSTRUCTIONS
@@ -523,6 +535,7 @@ def load_metadata(
     ADVANCED_SETTINGS = module.ADVANCED_SETTINGS
     TOOLS_SCHEMA = module.TOOLS_SCHEMA
     TOOLS = module.TOOLS
+    INTERMEDIATE_AUDIO = module.INTERMEDIATE_AUDIO
     PARAM_TYPE = type
     PARAM_INTERMEDIATE = intermediate
     PARAM_DB = db

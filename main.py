@@ -114,6 +114,7 @@ async def handle_incoming_call(
         enable_fields,
         context_limit,
     )
+    global voice_response
     # <Say> punctuation to improve text-to-speech flow
     if INTRO:
         voice_response.say(INTRO)

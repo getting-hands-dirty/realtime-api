@@ -67,7 +67,7 @@ if not OPENAI_API_KEY:
     raise ValueError("Missing the OpenAI API key. Please set it in the .env file.")
 
 app = FastAPI()
-
+voice_response = VoiceResponse()
 
 @app.get("/", response_class=JSONResponse)
 async def index_page():
@@ -102,7 +102,7 @@ async def handle_incoming_call(
     context_limit: int = 6000,
 ):
     """Handle incoming call and return TwiML response to connect to Media Stream."""
-    response = VoiceResponse()
+    
     load_metadata(
         type,
         intermediate,
@@ -116,13 +116,13 @@ async def handle_incoming_call(
     )
     # <Say> punctuation to improve text-to-speech flow
     if INTRO:
-        response.say(INTRO)
-        response.pause(length=1)
+        voice_response.say(INTRO)
+        voice_response.pause(length=1)
     host = request.url.hostname
     connect = Connect()
     connect.stream(url=f"wss://{host}/media-stream")
-    response.append(connect)
-    return HTMLResponse(content=str(response), media_type="application/xml")
+    voice_response.append(connect)
+    return HTMLResponse(content=str(voice_response), media_type="application/xml")
 
 
 @app.websocket("/media-stream")
@@ -317,37 +317,37 @@ async def handle_media_stream(websocket: WebSocket):
                                             message_index = 0
                                             result = None
 
-                                            async def send_intermediate_messages():
-                                                nonlocal message_index, result, responses
-                                                if PARAM_INTERMEDIATE:
-                                                    is_last_response_active = (
-                                                        responses[-1]["response_status"]
-                                                        == "in_progress"
-                                                    )
-                                                    print(
-                                                        f"Intermediate messages enabled. {is_last_response_active}"
-                                                    )
+                                            # async def send_intermediate_messages():
+                                            #     nonlocal message_index, result, responses
+                                            #     if PARAM_INTERMEDIATE:
+                                            #         is_last_response_active = (
+                                            #             responses[-1]["response_status"]
+                                            #             == "in_progress"
+                                            #         )
+                                            #         print(
+                                            #             f"Intermediate messages enabled. {is_last_response_active}"
+                                            #         )
 
-                                                    while result is None:
-                                                        # Wait for 3 second to see if the result is ready
-                                                        await asyncio.sleep(3)
-                                                        if (
-                                                            not result
-                                                            and not is_last_response_active
-                                                        ):
-                                                            current_msg = f"Respond to the user with waiting message to avoid silence: {intermediate_messages[message_index % len(intermediate_messages)]}"
-                                                            await send_conversation_item(
-                                                                openai_ws,
-                                                                current_msg,
-                                                                is_last_response_active,
-                                                            )
-                                                            message_index += 1
-                                                            break  # Exit the loop after sending the message
+                                            #         while result is None:
+                                            #             # Wait for 3 second to see if the result is ready
+                                            #             await asyncio.sleep(3)
+                                            #             if (
+                                            #                 not result
+                                            #                 and not is_last_response_active
+                                            #             ):
+                                            #                 current_msg = f"Respond to the user with waiting message to avoid silence: {intermediate_messages[message_index % len(intermediate_messages)]}"
+                                            #                 await send_conversation_item(
+                                            #                     openai_ws,
+                                            #                     current_msg,
+                                            #                     is_last_response_active,
+                                            #                 )
+                                            #                 message_index += 1
+                                            #                 break  # Exit the loop after sending the message
 
                                             # Run intermediate message sender and tool invocation concurrently
-                                            message_task = asyncio.create_task(
-                                                send_intermediate_messages()
-                                            )
+                                            # message_task = asyncio.create_task(
+                                            #     send_intermediate_messages()
+                                            # )
                                             try:
                                                 if PARAM_TYPE == "rag":
                                                     args["db"] = PARAM_DB
@@ -367,12 +367,14 @@ async def handle_media_stream(websocket: WebSocket):
                                                         PARAM_CONTEXT_LIMIT
                                                     )
                                                 print("Args to invoke tool:", args)
+
+                                                voice_response.enqueue()
                                                 result = await asyncio.to_thread(
                                                     tool_to_invoke.func, **args
                                                 )
-                                            finally:
-                                                message_task.cancel()  # Stop intermediate messages
-
+                                            except Exception as e:
+                                                print(f"Error in tool invokation: {e}")
+                                                
                                             if result:
                                                 print(
                                                     f"Received function call result: {result}"
@@ -401,7 +403,7 @@ async def handle_media_stream(websocket: WebSocket):
                                                 await openai_ws.send(
                                                     json.dumps(response_create_event)
                                                 )
-
+                                                voice_response.dial()
                                     except Exception as e:
                                         print(
                                             "Error processing question via Assistant:",

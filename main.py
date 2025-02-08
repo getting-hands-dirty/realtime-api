@@ -72,15 +72,16 @@ voice_response = VoiceResponse()
 @app.get("/", response_class=JSONResponse)
 async def index_page():
     load_metadata(
-        type="rag",
+        type="api",
         intermediate=False,
         db="pg",
         re_rank=False,
         hybrid_search=False,
         hybrid_search_weight=0.5,
         top_k=10,
-        enable_fields=False,
+        enable_fields=True,
         context_limit=6000,
+        voice="coral",
     )
     return {"message": INTRO}
 
@@ -89,8 +90,9 @@ async def index_page():
 async def handle_incoming_call(
     request: Request,
     # common
-    type: str = "rag",
+    type: str = "api",
     intermediate: bool = False,
+    voice: str = "coral",
     # rag
     db: str = "pg",
     re_rank: bool = False,
@@ -98,7 +100,7 @@ async def handle_incoming_call(
     hybrid_search_weight: float = 0.5,
     top_k: int = 10,
     # api
-    enable_fields: bool = False,
+    enable_fields: bool = True,
     context_limit: int = 6000,
 ):
     """Handle incoming call and return TwiML response to connect to Media Stream."""
@@ -113,6 +115,7 @@ async def handle_incoming_call(
         top_k,
         enable_fields,
         context_limit,
+        voice,
     )
     global voice_response
     # <Say> punctuation to improve text-to-speech flow
@@ -506,6 +509,7 @@ def load_metadata(
     top_k,
     enable_fields,
     context_limit,
+    voice,
 ):
     module_name = f"usecases.{type}.config"
     module = importlib.import_module(module_name)
@@ -531,7 +535,7 @@ def load_metadata(
     INTRO = module.INTRO_TEXT
     INSTRUCTIONS = module.SYSTEM_INSTRUCTIONS
     GREETING_TEXT = module.GREETING_TEXT
-    VOICE = module.VOICE
+    VOICE = voice  # module.VOICE
     ADVANCED_SETTINGS = module.ADVANCED_SETTINGS
     TOOLS_SCHEMA = module.TOOLS_SCHEMA
     TOOLS = module.TOOLS

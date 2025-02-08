@@ -530,7 +530,7 @@ def load_metadata(
     global PARAM_TOP_K
     global PARAM_ENABLE_FIELDS
     global PARAM_CONTEXT_LIMIT
-    global INTERMEDIATE_AUDIO
+    # global INTERMEDIATE_AUDIO
 
     INTRO = module.INTRO_TEXT
     INSTRUCTIONS = module.SYSTEM_INSTRUCTIONS
@@ -539,7 +539,7 @@ def load_metadata(
     ADVANCED_SETTINGS = module.ADVANCED_SETTINGS
     TOOLS_SCHEMA = module.TOOLS_SCHEMA
     TOOLS = module.TOOLS
-    INTERMEDIATE_AUDIO = module.INTERMEDIATE_AUDIO
+    # INTERMEDIATE_AUDIO = module.INTERMEDIATE_AUDIO
     PARAM_TYPE = type
     PARAM_INTERMEDIATE = intermediate
     PARAM_DB = db

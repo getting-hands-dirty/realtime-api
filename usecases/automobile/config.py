@@ -11,7 +11,7 @@ ADVANCED_SETTINGS = {
     "input_audio_format": "g711_ulaw",
     "output_audio_format": "g711_ulaw",
     "modalities": ["text","audio"],
-    "temperature": 0.8,
+    "temperature": 0.7,
 }
 
 # Entry message spoken out to the end user by Twilio.
@@ -150,7 +150,7 @@ SYSTEM_INSTRUCTIONS = f"""
                     "interior_color": "Oyster",
                     "fuel_economy_city_hwy": "24/34 MPG",
                     "vin": "3VW53EM07S8N24872"
-                }},
+                }},     
                 {{
                     "model_year": 2025,
                     "model": "iX M60",

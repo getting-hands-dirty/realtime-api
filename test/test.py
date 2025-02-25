@@ -1,27 +1,45 @@
+# OpenAI API key (replace with your actual key)
 import openai
 import os
+import csv
 
-# OpenAI API key (replace with your actual key)
-# api_key ="
-
+# OpenAI API key (ensure this is set correctly in your environment)
 os.environ["OPENAI_API_KEY"] = api_key
-openai.api_key = api_key
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 directory_path = "."  # Change this to the directory containing M4A files
+output_csv = "transcriptions.csv"
+
+data = []
 
 # Loop through all M4A files in the directory
 for filename in os.listdir(directory_path):
+    print(f"processing {filename}")
     if filename.endswith(".m4a"):
         file_path = os.path.join(directory_path, filename)
         
-        # Open the file and send it to the Whisper API using the new method
+        # Open the file and send it to the Whisper API
         with open(file_path, "rb") as audio_file:
             response = openai.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file
             )
         
-        # Print the transcribed text
-        print(f"Transcription for {filename}:")
-        print(response.text)
-        print("-" * 40)
+        # Get transcribed text and split by '?'
+        transcribed_text = response.text
+        split_texts = transcribed_text.split("?")
+        
+        # Store results
+        for text in split_texts:
+            cleaned_text = text.strip()
+            if cleaned_text:
+                print(cleaned_text)
+                data.append([filename, cleaned_text + "?"])
+
+# Save results to CSV
+with open(output_csv, "w", newline="", encoding="utf-8") as csv_file:
+    writer = csv.writer(csv_file)
+    writer.writerow(["Filename", "Segment"])
+    writer.writerows(data)
+
+print(f"Transcriptions saved to {output_csv}")

@@ -11,7 +11,7 @@ ADVANCED_SETTINGS = {
     "input_audio_format": "g711_ulaw",
     "output_audio_format": "g711_ulaw",
     "modalities": ["text","audio"],
-    "temperature": 0.5,
+    "temperature": 0.4,
 }
 
 # Entry message spoken out to the end user by Twilio.

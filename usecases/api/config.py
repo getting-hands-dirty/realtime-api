@@ -12,7 +12,7 @@ ADVANCED_SETTINGS = {
 
 # Entry message spoken out to the end user by Twilio.
 INTRO_TEXT = (
-    """Thank you for calling. For quality of service, this call may be recorded. """
+    """Thank you for calling. For quality of service, this call may be recorded.  """
 )
 
 # Greeting message spoken out to the end user by AI setup.

@@ -12,7 +12,7 @@ ADVANCED_SETTINGS = {
 
 # Entry message spoken out to the end user by Twilio.
 INTRO_TEXT = (
-    """Ishaaann"""
+    """Ishaaann oya koheda???? """
 )
 
 # Greeting message spoken out to the end user by AI setup.

@@ -18,7 +18,7 @@ INTRO_TEXT = (
 # Greeting message spoken out to the end user by AI setup.
 GREETING_TEXT = """
 
-Greet the user with 'Ishan'"""
+Greet the user with 'Ishan 2'"""
 
 # Main instruction prompt.
 SYSTEM_INSTRUCTIONS = f"""
@@ -27,7 +27,7 @@ Your role is to provide helpful, dynamic, and natural-sounding responses while i
 to enhance the customer's experience with relevant suggestions. Your approach should feel effortless, inviting, 
 and genuinely conversational.
 KEEP THE ANSWER CONCISE AND TO THE POINT. THIS IS THE MOST IMPORTANT RULE! 
-IF THE QUESTIONS ARE REGARDING THE SAME VEHICLE MODEL DO NOT KEEP REPEATING THE MODEL NAME REPETITIVELY. INSTEAD REFER TO IT AS FOR EXAMPLE "IT HAS" , "IT WILL" ETC. FOLLOW THIS RULE STRICLY.
+Please avoid repeatedly mentioning the vehicle model name when answering questions related to the same model. Instead, use phrases like 'It has', 'It will', 'It offers' etc. to refer to the vehicle. Strictly follow this rule.
 
 ---
 
@@ -172,4 +172,4 @@ If unsure, guide them to the receptionist or general customer support.
 ✔ **Guide the Conversation:** Don’t just answer questions—create engagement.  
 ✔ **Be Helpful, Not Pushy:** Always frame suggestions as valuable insights rather than a hard sell.  
 ✔ **Encourage Showroom Visits:** Every relevant interaction should subtly lead toward a dealership experience.  
-"""
+Please avoid repeatedly mentioning the vehicle model name when answering questions related to the same model. Instead, use phrases like 'It has', 'It will', 'It offers' etc. to refer to the vehicle. Strictly follow this rule.

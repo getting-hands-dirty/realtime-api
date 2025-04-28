@@ -333,7 +333,10 @@ def get_inventory_search(
     context_limit: int = None,
 ):
     """
-    Search the database for vehicle inventory information. VIN, StockNumber, Type, Make, Model, Year, etc., will be returned. When using this tool please say "Give me few minutes to have a look at our inventory"
+    Search the database for vehicle inventory information, including VIN, StockNumber, Type, Make, Model, Year, etc.
+    When using this tool, always REMEMBER to say: "Give me a few minutes to have a look at our inventory."
+    When describing the search results, avoid repeating the model name multiple times.
+    After initially mentioning the model, simply refer to it using natural phrases like "It offers...", "This model comes with...", or "You'll get..." to keep the conversation flowing and avoid sounding robotic.
     """
 
     def build_facet_filter(key: str, value: str):
@@ -363,7 +366,6 @@ def get_inventory_search(
 
     params = locals()
     facet_filters = generate_facet_filters(params)
-    print("Facet Filters: ", facet_filters)
 
     request_payload = {
         "requests": [
@@ -450,11 +452,8 @@ def extract_vehicle_chunks_text(options: list) -> str:
                     Year: {vehicle.get("year")}
                     Vehicle Status: {vehicle.get("vehicle_status")}
                     
-                    Features: {', '.join(vehicle.get("features", []))}
-                    Exterior Options: {', '.join(ext_options)}
-                    Interior Options: {', '.join(int_options)}
                     """.strip()
 
         chunks.append(chunk)
 
-    return "\n\n".join(chunks[:5])
+    return "\n\n".join(chunks[:10])

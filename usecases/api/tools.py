@@ -389,12 +389,17 @@ def get_inventory_search(
         response = requests.post(URL, headers=HEADERS, json=request_payload, timeout=30)
         response.raise_for_status()
         result = response.json()
-        data = extract_vehicle_chunks_text(result["results"][0]["hits"])
-        print("DATA: ", data)
+
+        hits = result["results"][0].get("hits")
+        if not hits:
+            print("❌ No vehicles found.")
+            return "No vehicles available for the selected criteria."
+
+        data = extract_vehicle_chunks_text(hits)
         return data
     except requests.RequestException as e:
         print("❌ Request failed:", e)
-        return None
+        return "No vehicles available"
 
 
 get_inventory_search_schema = StructuredTool.from_function(

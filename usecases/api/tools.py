@@ -52,9 +52,9 @@ def book_appointment(
     context_limit: int = None,  # Not used
 ):
     """
-    Book an appointment for a vehicle service, get all the details from the user to book the appointment.
+    Book an appointment for a vehicle service, test drive or visit the store.
+    It is a must that you request for Customer Name, Vehicle Details, Date, Time, and Service.
     These details should be gathered from the user before invoking this tool.
-    Customer Name, Vehicle Details, Date, Time, and Service.
     """
     url = f"{BASE_URL}/book-appointment"
     headers = {"Content-Type": "application/json"}

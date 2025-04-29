@@ -52,7 +52,7 @@ def book_appointment(
     context_limit: int = None,  # Not used
 ):
     """
-    Book an appointment for a vehicle service, test drive or visit the store.
+    Book an appointment for a vehicle test drive or visit the store.
     It is a must that you request for Customer Name, Vehicle Details, Date, Time, and Service.
     These details should be gathered from the user before invoking this tool.
     """
@@ -63,7 +63,7 @@ def book_appointment(
         "vehicle_details": vehicle_details,
         "date": date,
         "time": time,
-        "service": service,
+        "service": "test drive",
     }
     response = requests.post(url, json=payload, headers=headers)
     return response.text
@@ -73,9 +73,9 @@ book_appointment_schema = StructuredTool.from_function(
     func=book_appointment,
     name="book_appointment",
     description="""
-    Book an appointment for a vehicle service, get all the details from the user to book the appointment.
+    Book an appointment for a vehicle test drive or visit the store.
+    It is a must that you request for Customer Name, Vehicle Details, Date, Time, and Service.
     These details should be gathered from the user before invoking this tool.
-    Customer Name, Vehicle Details, Date, Time, and Service.
     """,
     args_schema=BookAppointmentModel,
     return_direct=True,

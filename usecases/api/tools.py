@@ -1,5 +1,7 @@
 import json
 import os
+from enum import Enum
+from typing import Optional, Literal, List
 from urllib.parse import urlencode
 
 import httpx
@@ -140,61 +142,240 @@ get_appointment_details_schema = StructuredTool.from_function(
 
 
 class InventorySearchModel(BaseModel):
-    vehicle_type: str = Field(
-        enum=["New", "Used", "Demo", "Certified Used"],
-        description="Vehicle classification (e.g., New, Used, Demo, Certified Used).",
+    make: str = Field(
+        None,
+        enum=[
+            "Audi",
+            "BMW",
+            "Buick",
+            "Chevrolet",
+            "Chrysler",
+            "Dodge",
+            "Ford",
+            "GMC",
+            "Honda",
+            "Hyundai",
+            "INFINITI",
+            "Jaguar",
+            "Jeep",
+            "Kia",
+            "Lexus",
+            "Mercedes-Benz",
+            "Nissan",
+            "Ram",
+            "Tesla",
+            "Toyota",
+            "Volkswagen",
+        ],
+        description="Vehicle make (e.g., Chevrolet, BMW, Nissan).",
     )
-    vehicle_status: str = Field(
-        enum=["In Stock", "In-Transit"],
-        description="Vehicle status (e.g., In Stock, In-Transit).",
+    type: str = Field(
+        None,
+        enum=["New", "Used", "Demo", "Certified Used"],
+        description="Vehicle classification. Options: New, Used, Demo, Certified Used.",
     )
     model: str = Field(
         None,
         enum=[
+            "1500",
+            "3 Series",
+            "4 Series",
+            "5 Series",
+            "7 Series",
+            "Altima",
+            "Armada",
+            "Avalanche",
             "Blazer",
+            "C-Class",
+            "Camry",
+            "Charger",
+            "Cherokee",
             "Colorado",
+            "Compass",
+            "Durango",
+            "E-PACE",
+            "Encore",
             "Equinox",
+            "Expedition",
+            "Explorer",
+            "F-150",
+            "Forte",
+            "GLE",
+            "GLS",
+            "Grand Cherokee",
+            "Highlander",
+            "K5",
             "Malibu",
+            "Model 3",
+            "Mustang",
+            "NX 200t",
+            "Optima",
+            "Pilot",
+            "Q7",
+            "QX50",
+            "RAV4",
+            "Rogue",
+            "Santa Cruz",
+            "Sentra",
+            "Sienna",
+            "Sierra 1500",
             "Silverado 1500",
             "Silverado 2500 HD",
             "Silverado 3500 HD",
+            "Sportage",
             "Suburban",
+            "Tacoma 4WD",
             "Tahoe",
+            "Taos",
+            "Telluride",
+            "Terrain",
             "Trailblazer",
             "Traverse",
             "Trax",
+            "Tundra 4WD",
+            "Voyager",
+            "Wagoneer L",
+            "Wrangler",
+            "Wrangler Unlimited",
+            "X1",
+            "X2",
+            "X3",
+            "X5",
+            "X6",
+            "X7",
+            "Yukon XL",
+            "i4",
+            "i7",
         ],
-        description="Vehicle model (e.g., Silverado 1500).",
+        description="Vehicle model (e.g., Silverado 1500, Colorado).",
     )
     trim: str = Field(
         None,
         enum=[
+            "(RED) Edition",
+            "1LT",
+            "2.5 S",
+            "2.5 SV",
             "2RS",
+            "330e",
+            "330i",
+            "330i xDrive",
             "3LT",
+            "430i",
+            "530i",
+            "530i xDrive",
+            "740i",
+            "740i xDrive",
             "ACTIV",
+            "Altitude Lux",
+            "C 300",
             "Custom",
-            "Custom Trail Boss",
+            "Denali",
+            "EX",
+            "EcoBoost",
+            "Elevation",
+            "FWD 4dr",
+            "GLE 350",
+            "GLS 580",
+            "GT Plus",
+            "GT-Line",
             "High Country",
+            "L",
+            "LE AAS",
             "LS",
             "LT",
             "LT Trail Boss",
             "LTZ",
+            "LUXE",
+            "LX",
+            "Laramie",
+            "Latitude",
+            "Limited",
+            "M40i",
+            "NA",
+            "Performance",
+            "Platinum",
+            "Preferred",
+            "Premier",
+            "Prestige",
             "RS",
             "RST",
+            "S",
+            "SE",
+            "SLT",
+            "SR",
+            "SV",
+            "SX Prestige X-Pro",
+            "SXT",
+            "Series II",
+            "Special Edition",
+            "Sport",
             "Trail Boss",
+            "Trailhawk",
+            "Unlimited Rubicon",
             "WT",
             "WT/LT",
+            "XL",
+            "XLE",
+            "XLE V6",
+            "XLT",
             "Z71",
+            "eDrive35",
+            "sDrive28i",
+            "sDrive30i",
+            "sDrive40i",
+            "xDrive28i",
+            "xDrive40i",
+            "xDrive60",
         ],
         description="Vehicle trim level (e.g., LT, LTZ).",
     )
     body_style: str = Field(
-        None, enum=["Cars", "SUVs", "Trucks"], description="Body style of the vehicle."
-    )
-    year: int = Field(
         None,
-        enum=["2025", "2026", "2025-2026"],
-        description="Manufacturing year of the vehicle.",
+        enum=["Cars", "Compact", "Convertible", "SUVs", "Trucks", "Vans"],
+        description="Body style of the vehicle.",
+    )
+    min_year: int = Field(
+        None,
+        enum=[
+            2007,
+            2011,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021,
+            2022,
+            2023,
+            2024,
+            2025,
+            2026,
+        ],
+        description="Minimum manufacturing year of the vehicle. e.g., 2020, 2021",
+    )
+    max_year: int = Field(
+        None,
+        enum=[
+            2007,
+            2011,
+            2014,
+            2015,
+            2016,
+            2017,
+            2018,
+            2019,
+            2020,
+            2021,
+            2022,
+            2023,
+            2024,
+            2025,
+            2026,
+        ],
+        description="Maximum manufacturing year of the vehicle. e.g., 2020, 2021",
     )
     min_price: int = Field(None, description="Minimum price range for the vehicle.")
     max_price: int = Field(None, description="Maximum price range for the vehicle.")
@@ -210,68 +391,179 @@ class InventorySearchModel(BaseModel):
             "Apple CarPlay",
             "Automatic Climate Control",
             "Backup Camera",
+            "Blind Spot Monitor",
             "Bluetooth",
+            "Collision Avoidance",
             "Cooled Seats",
             "Fog Lights",
+            "Forward Collision Warning",
+            "Hands-Free Liftgate",
             "Heated Seats",
+            "Interior Accents",
             "Keyless Entry",
             "Lane Departure Warning",
             "Lane keep assist",
             "Leather Appointed Seating Package",
+            "Leather Seats",
+            "M Sport",
             "Navigation System",
             "Parking Sensors / Assist",
+            "Parktronic",
+            "Performance Tire and Wheel",
+            "Power Liftgate",
             "Power Seats",
+            "Premium Audio",
+            "Premium Package",
+            "Push Start",
+            "Rain Sensing Wipers",
+            "Rear A/C",
+            "Rear Entertainment System",
+            "Rear Heated Seats",
+            "Rear Sunshade",
             "Remote Start",
+            "Satellite Radio Ready",
             "Side-Impact Air Bags",
             "Sunroof / Moonroof",
             "Technology Package",
             "Tow Package",
+            "WiFi Hotspot",
             "Wireless Phone Charging",
+            "Xenon Headlights",
         ],
         description="Specific vehicle feature to search for (e.g., Apple CarPlay).",
     )
     fuel_type: str = Field(
         None,
-        enum=["Diesel Fuel", "Gasoline Fuel"],
+        enum=[
+            "Diesel Fuel",
+            "Electric Fuel System",
+            "Flex Fuel Capability",
+            "Gasoline Fuel",
+            "Gasoline/Mild Electr",
+            "Hybrid Fuel",
+        ],
         description="Type of fuel used by the vehicle.",
     )
     engine_type: str = Field(
         None,
         enum=[
+            "1.5 Liter 3 Cylinder",
+            "1.5 Liter 4 Cylinder",
             "1.5L Turbo 4-cylinder engine",
+            "1.5L Turbo Gas Engine",
+            "1.6 Liter 4 Cylinder",
+            "2.0 Liter 4 Cylinder",
+            "2.0L Turbo 4-cylinder engine",
+            "2.3 Liter 4 Cylinder",
+            "2.4 Liter 4 Cylinder",
+            "2.5 Liter 4 Cylinder",
+            "2.5L 4-cylinder engine",
             "2.5L Turbo engine",
+            "2.7 Liter V6 Cylinde",
+            "3.0 Liter Straight 6",
+            "3.0 Liter V6 Cylinde",
+            "3.0L Duramax Turbo-Diesel I6 engine",
             "3.0L Duramax® Turbo Diesel engine",
+            "3.2 Liter V6 Cylinde",
+            "3.5 Liter V6 Cylinde",
+            "3.6 Liter V6 Cylinde",
             "3.6L V6 engine",
+            "3.8 Liter V6 Cylinde",
+            "4.0 Liter 8 Cylinder",
             "5.3L EcoTec3 V8 engine",
             "5.3L V8 engine",
+            "5.6 Liter 8 Cylinder",
+            "5.7 Liter 8 Cylinder",
             "6.2L EcoTec3 V8 engine",
             "6.2L V8 engine",
             "6.6L Duramax Turbo-Diesel V8 engine",
             "6.6L V8 Gas engine",
             "ECOTEC 1.2L Turbo engine",
             "ECOTEC 1.3L Turbo engine",
+            "ECOTEC 1.4L Turbo engine",
+            "Electric",
+            "FLEXIBLE FUEL, (GAS/ALC), 8 CYL, 5.3L, SFI, ALUM CYL DEACTIVATION, GM",
+            "GAS, 4 CYL, 2.4L, SIDI, DOHC, E85 MAX, ALUM, GM",
+            "Gas/Electric V-6 3.6 L/220",
+            "Intercooled Supercharger Premium Unleaded V-6 3.0 L/183",
+            "Intercooled Turbo Gas/Electric I-6 3.0 L/183",
+            "Intercooled Turbo Premium Unleaded I-4 2.0 L/120",
+            "Intercooled Turbo Premium Unleaded I-4 2.0 L/121",
+            "Intercooled Turbo Premium Unleaded I-4 2.0 L/122",
+            "Intercooled Turbo Premium Unleaded I-6 3.0 L/183",
+            "Regular Unleaded I-4 2.5 L/152",
+            "Regular Unleaded V-6 3.5 L/211",
             "TurboMax™ engine",
         ],
-        description="Type of engine (e.g., 3.6L V6 engine).",
+        description="Type of engine (e.g. 3.6L V6 engine, 6.6L V8 Gas engine).",
     )
     transmission: str = Field(
-        None, enum=["Automatic"], description="Transmission type."
+        None,
+        enum=[
+            "1-Speed Automatic",
+            "1-Speed CVT w/OD",
+            "6-Speed Automatic w/OD",
+            "7-Speed Auto-Shift Manual w/OD",
+            "8-Speed Automatic w/OD",
+            "9-Speed Automatic w/OD",
+            "Automatic",
+        ],
+        description="Transmission type.",
     )
     exterior_color: str = Field(
         None,
         enum=[
+            "Alpine White",
+            "Bernina Grey Amber Effect",
             "Black",
+            "Black Sapphire Metallic",
+            "Blk/black",
+            "Blu/blue",
+            "Blue",
+            "Bright Blue Metallic",
+            "CAJUN RED TINTCOAT",
             "Cacti Green",
+            "Cherry Red Tintcoat",
+            "Crimson Metallic",
             "Cypress Gray",
+            "Dark Copper Metallic",
+            "Dark Graphite Metallic",
+            "Donington Gray Metallic",
+            "Ebony Twilight Metallic",
+            "Fountain Blue",
+            "Glacier Silver Metallic",
+            "Gld/gold",
+            "Graphite Shadow",
+            "Gray",
+            "Graystone Metallic",
+            "Green",
+            "Gy/gray",
+            "Hydro Blue Pearlcoat",
             "Iridescent Pearl Tricoat",
             "Lakeshore Blue Metallic",
+            "Mar/maroon",
+            "Midnight Black Metallic",
             "Mineral Gray Metallic",
+            "Mineral White Metallic",
             "Mosaic Black Metallic",
             "Nitro Yellow Metallic",
+            "Onyx Black",
+            "Orange",
+            "Pacific Blue Metallic",
+            "Pewter Metallic",
             "Radiant Red Tintcoat",
-            "Slate Gray Metallic",
-            "Sterling Gray Metallic",
-            "Summit White",
+            "Red",
+            "Red Hot",
+            "Red/red",
+            "Satin Steel Metallic",
+            "Sil/silver",
+            "Silver",
+            "Silver Ice Metallic",
+            "Skyscraper Grey Metallic",
+            "Titanium Rush Metallic",
+            "Whi/white",
+            "White",
+            "White Frost Tricoat",
         ],
         description="Exterior color of the vehicle.",
     )
@@ -279,22 +571,45 @@ class InventorySearchModel(BaseModel):
         None,
         enum=[
             "Artemis Gray, Evotex seat trim",
+            "Ash",
+            "BLK/Black",
+            "Beige",
+            "Black",
             "Black with Red Accents, Evotex seat trim",
             "Black, Cloth seat trim",
+            "Brown",
+            "CUSTOM LEATHER APPOINTED SEAT TRIM",
+            "Canberra Beige",
+            "Canberra Beige/Black",
+            "Cognac",
             "Dark Atmosphere/ Medium Ash Gray, Premium cloth seat trim",
+            "Dark Walnut/Slate, Perforated leather-appointed front outboard seat trim",
+            "Ebony, Cloth with leatherette seat trim",
+            "GRY/Gray",
             "Gideon/Very Dark Atmosphere, Cloth seat trim",
             "Gideon/Very Dark Atmosphere, Leather-Appointed seating surfaces",
             "Gideon/Very Dark Atmosphere, Perforated leather-appointed front outboard seating positions",
+            "Gideon/Very Dark Atmosphere, Premium cloth seat trim",
+            "Graphite",
+            "Gray",
+            "Ivory White/Black",
             "Jet Black with Blue accents, Cloth/Evotex seat trim",
+            "Jet Black with Red Accents, Perforated Leather-Appointed seat trim",
             "Jet Black with Red Accents, Perforated Leather-Appointed seat trim",
             "Jet Black with Red accents, Evotex seat trim",
             "Jet Black with Yellow accents, Cloth/Evotex seat trim",
             "Jet Black with Yellow stitching, Evotex seat trim",
             "Jet Black, Cloth seat trim",
             "Jet Black, Evotex seat trim",
+            "Jet Black, Forge perforated leather seat trim",
             "Jet Black, Leather-Appointed seating surfaces",
+            "Jet Black, Perforated Leather-Appointed seat trim",
+            "Jet Black, Perforated Leather-Appointed seating",
+            "Jet Black, Perforated leather seating surfaces 1st and 2nd row",
             "Jet Black, Leather-appointed front outboard seat trim",
             "Jet Black, Leather-appointed front outboard seating positions",
+            "Jet Black/Dark Ash, Cloth seat trim",
+            "Jet Black/Medium Ash Gray, Cloth seat trim",
             "Jet Black, Perforated Leather Seating surfaces",
             "Jet Black, Perforated Leather-Appointed seat trim",
             "Jet Black, Perforated leather-appointed front outboard seating positions",
@@ -305,30 +620,35 @@ class InventorySearchModel(BaseModel):
             "LT Jet Black, Evotex seat trim",
             "LT Jet Black, Premium cloth seat trim",
             "Maple Sugar, Sueded Microfiber seat trim",
+            "Medium Ash Gray, Premium Cloth seat trim",
+            "NNB/BLACK",
+            "RA00/Charcoal",
             "RS Jet Black with Torch Red accents, Perforated Leather-appointed seat trim",
+            "TAN/Tan",
         ],
-        description="Interior color of the vehicle.",
+        description="Interior color of the vehicle. (e.g. Black, Gray, Jet Black, Perforated leather-appointed front outboard seating positions).",
     )
 
 
 @tool
 def get_inventory_search(
-    vehicle_type: str = None,
-    vehicle_status: str = None,
-    model: str = None,
-    trim: str = None,
-    body_style: str = None,
-    year: int = None,
-    min_price: int = None,
-    max_price: int = None,
-    min_mileage: int = None,
-    max_mileage: int = None,
-    features: str = None,
-    fuel_type: str = None,
-    engine_type: str = None,
-    transmission: str = None,
-    exterior_color: str = None,
-    interior_color: str = None,
+    make: Optional[str] = None,
+    type: Optional[str] = None,
+    model: Optional[str] = None,
+    trim: Optional[str] = None,
+    body_style: Optional[str] = None,
+    min_year: Optional[int] = None,
+    max_year: Optional[int] = None,
+    min_price: Optional[int] = None,
+    max_price: Optional[int] = None,
+    min_mileage: Optional[int] = None,
+    max_mileage: Optional[int] = None,
+    features: Optional[str] = None,
+    fuel_type: Optional[str] = None,
+    engine_type: Optional[str] = None,
+    transmission: Optional[str] = None,
+    exterior_color: Optional[str] = None,
+    interior_color: Optional[str] = None,
     enable_fields: bool = False,
     context_limit: int = None,
 ):
@@ -339,13 +659,15 @@ def get_inventory_search(
     After initially mentioning the model, simply refer to it using natural phrases like "It offers...", "This model comes with...", or "You'll get..." to keep the conversation flowing and avoid sounding robotic.
     """
 
-    def build_facet_filter(key: str, value: str):
-        return f"{key}:{value}"
+    def build_facet_filter(key: str, value: str | int | List[int]) -> List[str]:
+        if isinstance(value, list):
+            return [f"{key}:{v}" for v in value]
+        return [f"{key}:{value}"]
 
     def generate_facet_filters(params: dict):
         mapping = {
+            "make": "make",
             "type": "type",
-            "vehicle_status": "vehicle_status",
             "model": "model",
             "trim": "trim",
             "body_style": "body",
@@ -358,14 +680,51 @@ def get_inventory_search(
         }
 
         facet_filters = []
+
         for key, prefix in mapping.items():
             value = params.get(key)
-            if value:
-                facet_filters.append([build_facet_filter(prefix, value)])
+            if value is not None:
+                facet_filters.append(build_facet_filter(prefix, value))
+
+        min_year = params.get("min_year")
+        max_year = params.get("max_year")
+
+        if min_year and max_year:
+            year_range = list(range(min_year, max_year + 1))
+            facet_filters.append(build_facet_filter("year", year_range))
+        elif min_year:
+            facet_filters.append(build_facet_filter("year", min_year))
+        elif max_year:
+            facet_filters.append(build_facet_filter("year", max_year))
+
         return facet_filters
+
+    def generate_numeric_filters(params: dict) -> List[str]:
+        numeric_filters = []
+
+        min_price = params.get("min_price")
+        max_price = params.get("max_price")
+
+        if min_price is not None:
+            numeric_filters.append(f"our_price>={min_price}")
+        if max_price is not None:
+            numeric_filters.append(f"our_price<={max_price}")
+
+        min_mileage = params.get("min_mileage")
+        max_mileage = params.get("max_mileage")
+
+        if min_mileage is not None:
+            numeric_filters.append(f"miles>={min_mileage}")
+        if max_mileage is not None:
+            numeric_filters.append(f"miles<={max_mileage}")
+
+        return numeric_filters
 
     params = locals()
     facet_filters = generate_facet_filters(params)
+    numeric_filters = generate_numeric_filters(params)
+    print("Facet Filters: ", facet_filters)
+    print("Numeric Filters: ", numeric_filters)
 
     request_payload = {
         "requests": [
@@ -374,7 +733,73 @@ def get_inventory_search(
                 "params": urlencode(
                     {
                         "facetFilters": json.dumps(facet_filters),
-                        "facets": json.dumps(["model", "type", "trim", "body"]),
+                        "numericFilters": json.dumps(numeric_filters),
+                        "facets": json.dumps(
+                            [
+                                "Location",
+                                "Location_VDP",
+                                "algolia_sort_order",
+                                "api_id",
+                                "bedtype",
+                                "body",
+                                "certified",
+                                "city_mpg",
+                                "courtesy_transportation",
+                                "custom_sort",
+                                "cylinders",
+                                "date_in_stock",
+                                "date_modified",
+                                "days_in_stock",
+                                "doors",
+                                "drivetrain",
+                                "engine_description",
+                                "ext_color",
+                                "ext_color_generic",
+                                "ext_options",
+                                "features",
+                                "features",
+                                "finance_details",
+                                "ford_SpecialVehicle",
+                                "fueltype",
+                                "hash",
+                                "hw_mpg",
+                                "in_transit_filter",
+                                "int_color",
+                                "int_options",
+                                "lease_details",
+                                "lightning",
+                                "lightning.class",
+                                "lightning.finance_monthly_payment",
+                                "lightning.isPolice",
+                                "lightning.isSpecial",
+                                "lightning.lease_monthly_payment",
+                                "lightning.locations",
+                                "lightning.locations.meta_location",
+                                "lightning.status",
+                                "link",
+                                "location",
+                                "make",
+                                "metal_flags",
+                                "miles",
+                                "model",
+                                "model_number",
+                                "msrp",
+                                "objectID",
+                                "our_price",
+                                "our_price_label",
+                                "special_field_4",
+                                "special_field_5",
+                                "stock",
+                                "thumbnail",
+                                "title_vrp",
+                                "transmission_description",
+                                "trim",
+                                "type",
+                                "vehicle_status",
+                                "vin",
+                                "year",
+                            ]
+                        ),
                         "hitsPerPage": 20,
                         "maxValuesPerFacet": 250,
                     }
@@ -423,42 +848,48 @@ TOOLS_SCHEMA = [
 
 
 def extract_vehicle_chunks_text(options: list) -> str:
+    if not options:
+        return "No vehicles available"
+
     chunks = []
 
     for vehicle in options:
-        ext_options = [
-            BeautifulSoup(option, "html.parser").get_text(" ", strip=True)
-            for option in vehicle.get("ext_options", [])
-        ]
-        int_options = [
-            BeautifulSoup(option, "html.parser").get_text(" ", strip=True)
-            for option in vehicle.get("int_options", [])
-        ]
+        try:
+            ext_options = [
+                BeautifulSoup(option, "html.parser").get_text(" ", strip=True)
+                for option in vehicle.get("ext_options", [])
+            ]
+            int_options = [
+                BeautifulSoup(option, "html.parser").get_text(" ", strip=True)
+                for option in vehicle.get("int_options", [])
+            ]
 
-        chunk = f"""Title: {vehicle.get("title_vrp")}
-                    MSRP: {vehicle.get("msrp")}
-                    Our Price: {vehicle.get("our_price")}
-                    Body: {vehicle.get("body")}
-                    Cylinders: {vehicle.get("cylinders")}
-                    In Stock Since: {vehicle.get("date_in_stock")}
-                    Doors: {vehicle.get("doors")}
-                    Drivetrain: {vehicle.get("drivetrain")}
-                    Engine: {vehicle.get("engine_description")}
-                    Exterior Color: {vehicle.get("ext_color")} ({vehicle.get("ext_color_generic")})
-                    Fuel Type: {vehicle.get("fueltype")}
-                    Interior Color: {vehicle.get("int_color")}
-                    Location: {vehicle.get("location")}
-                    Make: {vehicle.get("make")}
-                    Miles: {vehicle.get("miles")}
-                    Model: {vehicle.get("model")}
-                    Transmission: {vehicle.get("transmission_description")}
-                    Trim: {vehicle.get("trim")}
-                    Type: {vehicle.get("type")}
-                    Year: {vehicle.get("year")}
-                    Vehicle Status: {vehicle.get("vehicle_status")}
-                    
-                    """.strip()
+            chunk = f"""Title: {vehicle.get("title_vrp")}
+                        MSRP: {vehicle.get("msrp")}
+                        Our Price: {vehicle.get("our_price")}
+                        Body: {vehicle.get("body")}
+                        Cylinders: {vehicle.get("cylinders")}
+                        In Stock Since: {vehicle.get("date_in_stock")}
+                        Doors: {vehicle.get("doors")}
+                        Drivetrain: {vehicle.get("drivetrain")}
+                        Engine: {vehicle.get("engine_description")}
+                        Exterior Color: {vehicle.get("ext_color")} ({vehicle.get("ext_color_generic")})
+                        Fuel Type: {vehicle.get("fueltype")}
+                        Interior Color: {vehicle.get("int_color")}
+                        Location: {vehicle.get("location")}
+                        Make: {vehicle.get("make")}
+                        Miles: {vehicle.get("miles")}
+                        Model: {vehicle.get("model")}
+                        Transmission: {vehicle.get("transmission_description")}
+                        Trim: {vehicle.get("trim")}
+                        Type: {vehicle.get("type")}
+                        Year: {vehicle.get("year")}
+                        Vehicle Status: {vehicle.get("vehicle_status")}
+                        """.strip()
 
-        chunks.append(chunk)
+            chunks.append(chunk)
+        except Exception as e:
+            print(f"Error processing vehicle: {e}")
+            continue
 
     return "\n\n".join(chunks[:10])

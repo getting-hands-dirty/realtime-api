@@ -69,6 +69,7 @@ if not OPENAI_API_KEY:
 app = FastAPI()
 voice_response = VoiceResponse()
 
+
 @app.get("/", response_class=JSONResponse)
 async def index_page():
     load_metadata(
@@ -104,7 +105,7 @@ async def handle_incoming_call(
     context_limit: int = 6000,
 ):
     """Handle incoming call and return TwiML response to connect to Media Stream."""
-    
+
     load_metadata(
         type,
         intermediate,
@@ -306,6 +307,7 @@ async def handle_media_stream(websocket: WebSocket):
                                         args = json.loads(
                                             last_response_result.get("arguments", "{}")
                                         )
+                                        print("ARGS: ", args)
 
                                         intermediate_messages = [
                                             "I'm processing your request, this will just take a moment...",
@@ -371,20 +373,20 @@ async def handle_media_stream(websocket: WebSocket):
                                                         PARAM_CONTEXT_LIMIT
                                                     )
                                                 print("Args to invoke tool:", args)
-                                                
+
                                                 # audio_delta_intermediate = {
                                                 #     "event": "media",
                                                 #     "streamSid": stream_sid,
                                                 #     "media": {"payload": INTERMEDIATE_AUDIO},
                                                 # }
                                                 # await websocket.send_json(audio_delta_intermediate)
-                                                
+
                                                 result = await asyncio.to_thread(
                                                     tool_to_invoke.func, **args
                                                 )
                                             except Exception as e:
                                                 print(f"Error in tool invokation: {e}")
-                                                
+
                                             if result:
                                                 print(
                                                     f"Received function call result: {result}"
@@ -417,8 +419,7 @@ async def handle_media_stream(websocket: WebSocket):
                                                 # await websocket.send_json(
                                                 #     {"event": "clear", "streamSid": stream_sid}
                                                 # )
-                                                
-                                                
+
                                     except Exception as e:
                                         print(
                                             "Error processing question via Assistant:",

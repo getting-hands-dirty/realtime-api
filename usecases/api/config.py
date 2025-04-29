@@ -16,7 +16,7 @@ INTRO_TEXT = (
 )
 
 # Greeting message spoken out to the end user by AI setup.
-GREETING_TEXT = """Greet the user with 'Hello, this is the BMW of Fairfax Sales Team Assistant! How can I help you?'"""
+GREETING_TEXT = """Greet the user with 'Hello, this is the Capitol Chevrolet Montgomery Team Assistant! How can I help you?'"""
 
 # Main instruction prompt.
 SYSTEM_INSTRUCTIONS = assistant_prompt = voice_assistant_prompt = (

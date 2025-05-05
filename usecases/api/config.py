@@ -16,7 +16,7 @@ INTRO_TEXT = (
 )
 
 # Greeting message spoken out to the end user by AI setup.
-GREETING_TEXT = """Hello! This is the Capitol Chevrolet Montgomery Assistant—thanks for calling today.Before begin will you be able to provide me your mobile phone number and your name """
+GREETING_TEXT = """"""
 
 # Main instruction prompt.
 SYSTEM_INSTRUCTIONS = assistant_prompt = voice_assistant_prompt = (

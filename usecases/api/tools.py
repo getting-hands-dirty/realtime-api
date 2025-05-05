@@ -31,7 +31,7 @@ URL = f"https://{ALGOLIA_APP_ID.lower()}-dsn.algolia.net/1/indexes/*/queries"
 # ---------------------------
 class ContactDetailsModel(BaseModel):
     customer_name: str = Field(..., description="Customer's full name.")
-    phone_number: str = Field(..., description="Customer's phone number in international format (e.g., +61412345678).")
+    phone_number: str = Field(..., description="Customer's phone number.")
 
 
 @tool

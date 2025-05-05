@@ -1,10 +1,8 @@
 import json
 import os
-from enum import Enum
-from typing import Optional, Literal, List
+from typing import Optional, List
 from urllib.parse import urlencode
 
-import httpx
 import requests
 from bs4 import BeautifulSoup
 from langchain_core.tools import StructuredTool, tool
@@ -29,10 +27,71 @@ HEADERS = {
 URL = f"https://{ALGOLIA_APP_ID.lower()}-dsn.algolia.net/1/indexes/*/queries"
 
 # ---------------------------
+# Get Customer Details Tool
+# ---------------------------
+class ContactDetailsModel(BaseModel):
+    customer_name: str = Field(..., description="Customer's full name.")
+    phone_number: str = Field(..., description="Customer's phone number in international format (e.g., +61412345678).")
+
+
+@tool
+def capture_contact_details(
+    customer_name: str,
+    phone_number: str,
+    enable_fields: bool = False,  # Not used
+    context_limit: int = None,    # Not used
+):
+    """
+    Capture the customer's contact details for safety in case the conversation gets interrupted.
+    Always invoke this tool right after the greeting, **only after collecting and confirming** the customer's contact details.
+
+                    Follow these steps strictly before invoking:
+                    1. Politely ask the customer for their full name and best phone number.
+                       → Example: “Just before we dive in, can I grab your name and the best number to reach you in case we get disconnected?”
+
+                    2. Repeat the captured phone number and confirm:
+                       → “Thanks, [Name]. I’ve noted your number as [Phone Number]. Can you please confirm that this is correct?”
+
+                    3. Wait for the customer to explicitly confirm.
+
+                    4. ONLY AFTER the customer confirms, invoke this tool with the captured name and phone number.
+                """
+
+    url = f"{BASE_URL}/save-contact"
+    headers = {"Content-Type": "application/json"}
+    payload = {
+        "customer_name": customer_name,
+        "phone_number": phone_number,
+        "service_supplier": "Capitol Chevrolet Montgomery",
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    return response.text
+
+
+capture_contact_details_schema = StructuredTool.from_function(
+    func=capture_contact_details,
+    name="capture_contact_details",
+    description="""Always invoke this tool right after the greeting, **only after collecting and confirming** the customer's contact details.
+                    
+                    Follow these steps strictly before invoking:
+                    1. Politely ask the customer for their full name and best phone number.
+                       → Example: “Just before we dive in, can I grab your name and the best number to reach you in case we get disconnected?”
+                    
+                    2. Repeat the captured phone number and confirm:
+                       → “Thanks, [Name]. I’ve noted your number as [Phone Number]. Can you please confirm that this is correct?”
+                    
+                    3. Wait for the customer to explicitly confirm.
+                    
+                    4. ONLY AFTER the customer confirms, invoke this tool with the captured name and phone number.
+                """,
+    args_schema=ContactDetailsModel,
+    return_direct=True,
+)
+
+
+# ---------------------------
 # Book Appointment Tool
 # ---------------------------
-
-
 class BookAppointmentModel(BaseModel):
     customer_name: str = Field(None, description="Customer Name.")
     vehicle_details: str = Field(None, description="Vehicle Details.")
@@ -84,8 +143,6 @@ book_appointment_schema = StructuredTool.from_function(
 # -------------------------
 # Get Booking Details Tool
 # -------------------------
-
-
 class AppointmentDetails(BaseModel):
     query: str = Field(
         None,
@@ -139,8 +196,6 @@ get_appointment_details_schema = StructuredTool.from_function(
 # ----------------------------
 # Inventory Search Tool
 # ----------------------------
-
-
 class InventorySearchModel(BaseModel):
     make: str = Field(
         None,
@@ -808,8 +863,6 @@ def get_inventory_search(
         ]
     }
 
-    print("RAG Payload: ", request_payload)
-
     try:
         response = requests.post(URL, headers=HEADERS, json=request_payload, timeout=30)
         response.raise_for_status()
@@ -834,18 +887,6 @@ get_inventory_search_schema = StructuredTool.from_function(
     args_schema=InventorySearchModel,
     return_direct=True,
 )
-
-# ---------------------------
-# Exported Tools
-# ---------------------------
-
-TOOLS = [book_appointment, get_inventory_search, get_appointment_details]
-TOOLS_SCHEMA = [
-    convert_to_function(book_appointment_schema),
-    convert_to_function(get_inventory_search_schema),
-    convert_to_function(get_appointment_details_schema),
-]
-
 
 def extract_vehicle_chunks_text(options: list) -> str:
     if not options:
@@ -893,3 +934,17 @@ def extract_vehicle_chunks_text(options: list) -> str:
             continue
 
     return "\n\n".join(chunks[:10])
+
+
+
+# ---------------------------
+# Exported Tools
+# ---------------------------
+
+TOOLS = [book_appointment, get_inventory_search, get_appointment_details, capture_contact_details]
+TOOLS_SCHEMA = [
+    convert_to_function(book_appointment_schema),
+    convert_to_function(get_inventory_search_schema),
+    convert_to_function(get_appointment_details_schema),
+    convert_to_function(capture_contact_details_schema),
+]

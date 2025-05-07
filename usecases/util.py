@@ -1,6 +1,8 @@
 import inspect
 from functools import wraps
 
+from bs4 import BeautifulSoup
+
 parameter_descriptions = {
     "vin": "Vehicle Identification Number.",
     "stock_number": "Stock number of the vehicle.",
@@ -101,3 +103,48 @@ def convert_to_function(schema):
     }
 
     return output
+
+
+def extract_prices(html):
+    soup = BeautifulSoup(html, "html.parser")
+    price_data = {}
+
+    for block in soup.select("div.price-block"):
+        label = block.select_one("span.price-label")
+        price = block.select_one("span.price")
+
+        if label and price:
+            label_text = label.get_text(strip=True).replace("*", "")
+            price_text = price.get_text(strip=True).replace("$", "").replace(",", "")
+            price_data[label_text] = float(price_text)
+
+    return {
+        "msrp": price_data.get("MSRP"),
+        "dealer_discount": price_data.get("Dealer Discount"),
+        "customer_cash": price_data.get("Customer Cash"),
+        "total_savings": price_data.get("Total Savings"),
+        "final_price": price_data.get("Final Price"),
+    }
+
+
+def format_vehicle_price(price_data: dict) -> str:
+    if all(v is None for v in price_data.values()):
+        return ""
+
+    if price_data["msrp"] and all(
+        price_data.get(k) is None
+        for k in ["dealer_discount", "customer_cash", "total_savings", "final_price"]
+    ):
+        return f"Our Price: ${price_data['msrp']:,.2f}"
+
+    # MSRP + Discounts
+    discount_keys = []
+    if price_data["dealer_discount"]:
+        discount_keys.append("Dealer Discount")
+    if price_data["customer_cash"]:
+        discount_keys.append("Customer Cash")
+    if price_data["total_savings"]:
+        discount_keys.append("Total Savings")
+
+    msg = f"MSRP: ${price_data['msrp']:,.2f}. After applying {' and '.join(discount_keys)}, the final price is ${price_data['final_price']:,.2f}."
+    return msg

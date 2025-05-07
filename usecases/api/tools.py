@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from langchain_core.tools import StructuredTool, tool
 from pydantic import BaseModel, Field
 
-from usecases.util import convert_to_function
+from usecases.util import convert_to_function, extract_prices, format_vehicle_price
 
 BASE_URL = os.getenv(
     "TOOLS_API_URL", "https://mock-api-realtime-938786674786.us-central1.run.app"
@@ -26,6 +26,7 @@ HEADERS = {
 
 URL = f"https://{ALGOLIA_APP_ID.lower()}-dsn.algolia.net/1/indexes/*/queries"
 
+
 # ---------------------------
 # Get Customer Details Tool
 # ---------------------------
@@ -39,7 +40,7 @@ def capture_contact_details(
     customer_name: str,
     phone_number: str,
     enable_fields: bool = False,  # Not used
-    context_limit: int = None,    # Not used
+    context_limit: int = None,  # Not used
 ):
     """
     Capture the customer's contact details for safety in case the conversation gets interrupted.
@@ -55,7 +56,7 @@ def capture_contact_details(
                     3. Wait for the customer to explicitly confirm.
 
                     4. ONLY AFTER the customer confirms, invoke this tool with the captured name and phone number.
-                """
+    """
 
     url = f"{BASE_URL}/save-contact"
     headers = {"Content-Type": "application/json"}
@@ -140,6 +141,7 @@ book_appointment_schema = StructuredTool.from_function(
     return_direct=True,
 )
 
+
 # -------------------------
 # Get Booking Details Tool
 # -------------------------
@@ -193,6 +195,8 @@ get_appointment_details_schema = StructuredTool.from_function(
     args_schema=AppointmentDetails,
     return_direct=True,
 )
+
+
 # ----------------------------
 # Inventory Search Tool
 # ----------------------------
@@ -708,10 +712,32 @@ def get_inventory_search(
     context_limit: int = None,
 ):
     """
-    Search the database for vehicle inventory information, including VIN, StockNumber, Type, Make, Model, Year, etc.
+    Search the database for vehicle inventory information.
+
+    The response will include the following attributes:
+    - Body
+    - Cylinders
+    - Doors
+    - DriveTrain
+    - Engine
+    - Exterior Color
+    - Fueltype
+    - Interior Color
+    - Fuel Type
+    - Miles
+    - Transmission
+    - Trim
+    - Year
+
+    If pricing information is available, it will include the MSRP (Manufacturer’s Suggested Retail Price).
+    If any discounts such as Dealer Discount, Customer Cash, or Total Savings are present, the response will
+    highlight the MSRP and indicate the final price after applying these discounts.
+
+    Context:
     When using this tool, always REMEMBER to say: "Give me a few minutes to have a look at our inventory."
     When describing the search results, avoid repeating the model name multiple times.
-    After initially mentioning the model, simply refer to it using natural phrases like "It offers...", "This model comes with...", or "You'll get..." to keep the conversation flowing and avoid sounding robotic.
+    After initially mentioning the model, simply refer to it using natural phrases like "It offers...",
+    "This model comes with...", or "You'll get..." to keep the conversation flowing and avoid sounding robotic.
     """
 
     def build_facet_filter(key: str, value: str | int | List[int]) -> List[str]:
@@ -883,10 +909,38 @@ def get_inventory_search(
 get_inventory_search_schema = StructuredTool.from_function(
     func=get_inventory_search,
     name="get_inventory_search",
-    description="Search the database for vehicle inventory information. VIN, StockNumber, Type, Make, Model, Year, etc., will be returned.",
+    description="""Search the database for vehicle inventory information.
+                    
+                    The response will include the following attributes:
+                    - Body
+                    - Cylinders
+                    - Doors
+                    - DriveTrain
+                    - Engine
+                    - Exterior Color
+                    - Fueltype
+                    - Interior Color
+                    - Fuel Type
+                    - Miles
+                    - Transmission
+                    - Trim
+                    - Year
+                    
+                    If pricing information is available, it will include the MSRP (Manufacturer’s Suggested Retail Price).
+                    If any discounts such as Dealer Discount, Customer Cash, or Total Savings are present, the response will
+                    highlight the MSRP and indicate the final price after applying these discounts.
+                    eg: The MSRP for this vehicle is $47,000. After applying a dealer discount and customer cash offer, the final price is $43,500.
+                    
+                    Context:
+                    When using this tool, always REMEMBER to say: "Give me a few minutes to have a look at our inventory."
+                    When describing the search results, avoid repeating the model name multiple times.
+                    After initially mentioning the model, simply refer to it using natural phrases like "It offers...", 
+                    "This model comes with...", or "You'll get..." to keep the conversation flowing and avoid sounding robotic.
+                    """,
     args_schema=InventorySearchModel,
     return_direct=True,
 )
+
 
 def extract_vehicle_chunks_text(options: list) -> str:
     if not options:
@@ -904,28 +958,25 @@ def extract_vehicle_chunks_text(options: list) -> str:
                 BeautifulSoup(option, "html.parser").get_text(" ", strip=True)
                 for option in vehicle.get("int_options", [])
             ]
+            price = extract_prices(vehicle.get("lightning")["advancedPricingStack"])
 
             chunk = f"""Title: {vehicle.get("title_vrp")}
-                        MSRP: {vehicle.get("msrp")}
-                        Our Price: {vehicle.get("our_price")}
                         Body: {vehicle.get("body")}
+                        Vin: {vehicle.get("vin")}
                         Cylinders: {vehicle.get("cylinders")}
-                        In Stock Since: {vehicle.get("date_in_stock")}
                         Doors: {vehicle.get("doors")}
                         Drivetrain: {vehicle.get("drivetrain")}
                         Engine: {vehicle.get("engine_description")}
                         Exterior Color: {vehicle.get("ext_color")} ({vehicle.get("ext_color_generic")})
                         Fuel Type: {vehicle.get("fueltype")}
                         Interior Color: {vehicle.get("int_color")}
-                        Location: {vehicle.get("location")}
-                        Make: {vehicle.get("make")}
                         Miles: {vehicle.get("miles")}
                         Model: {vehicle.get("model")}
                         Transmission: {vehicle.get("transmission_description")}
                         Trim: {vehicle.get("trim")}
                         Type: {vehicle.get("type")}
                         Year: {vehicle.get("year")}
-                        Vehicle Status: {vehicle.get("vehicle_status")}
+                        Detailed price: {format_vehicle_price(price) if price else vehicle.get("our_price")}
                         """.strip()
 
             chunks.append(chunk)
@@ -937,11 +988,17 @@ def extract_vehicle_chunks_text(options: list) -> str:
 
 
 
+
 # ---------------------------
 # Exported Tools
 # ---------------------------
 
-TOOLS = [book_appointment, get_inventory_search, get_appointment_details, capture_contact_details]
+TOOLS = [
+    book_appointment,
+    get_inventory_search,
+    get_appointment_details,
+    capture_contact_details,
+]
 TOOLS_SCHEMA = [
     convert_to_function(book_appointment_schema),
     convert_to_function(get_inventory_search_schema),

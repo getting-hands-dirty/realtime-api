@@ -957,14 +957,18 @@ def extract_vehicle_chunks_text(options: list) -> str:
     if not options:
         return "No vehicles available"
 
-    if len(options) > 3:
+    vehicle_count = len(options)
+    if vehicle_count > 3:
         summaries = []
         for vehicle in options[:3]:
             summaries.append(
-                f"{vehicle.get('ext_color')} color {vehicle.get("year")} {vehicle.get('trim')} with {vehicle.get('int_color')} interior"
+                f"{vehicle.get('ext_color')} {vehicle.get('year')} {vehicle.get('trim')} with {vehicle.get('int_color')} interior"
             )
-        summary_text = ", ".join(summaries)
-        return f"We have a few vehicles available, such as {summary_text}. Would you like to know more details about any of these cars?"
+        summary_text = "; ".join(summaries)
+        return (
+            f"We have {vehicle_count} vehicles available. Here are a few examples: {summary_text}. "
+            "Would you like to see detailed specs or more options?"
+        )
 
     chunks = []
 
@@ -1004,7 +1008,7 @@ def extract_vehicle_chunks_text(options: list) -> str:
             print(f"Error processing vehicle: {e}")
             continue
 
-    return "\n\n".join(chunks[:10])
+    return f"We have {vehicle_count} vehicles available:\n\n" + "\n\n".join(chunks[:10])
 
 # ---------------------------
 # Exported Tools

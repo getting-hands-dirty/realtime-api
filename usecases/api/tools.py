@@ -56,6 +56,9 @@ def capture_contact_details(
                     3. Wait for the customer to explicitly confirm.
 
                     4. ONLY AFTER the customer confirms, invoke this tool with the captured name and phone number.
+
+                    5. Once the tool is invoked, say: “Great, let me take a quick note of that information.
+
     """
 
     url = f"{BASE_URL}/save-contact"
@@ -84,6 +87,8 @@ capture_contact_details_schema = StructuredTool.from_function(
                     3. Wait for the customer to explicitly confirm.
                     
                     4. ONLY AFTER the customer confirms, invoke this tool with the captured name and phone number.
+                    
+                    5. Once the tool is invoked, say: “Great, let me take a quick note of that information.
                 """,
     args_schema=ContactDetailsModel,
     return_direct=True,
@@ -133,9 +138,15 @@ book_appointment_schema = StructuredTool.from_function(
     func=book_appointment,
     name="book_appointment",
     description="""
-    Book an appointment for a vehicle test drive or visit the store.
-    It is a must that you request for Customer Name, Vehicle Details, Date, Time, and Service.
-    These details should be gathered from the user before invoking this tool.
+    Book an appointment for a vehicle test drive or store visit.
+    Before invoking, collect the following from the user:
+    • Customer Name
+    • Vehicle Details
+    • Date
+    • Time (must be between 9:00 AM and 8:00 PM)
+    • Service Type
+    
+    If the provided time is outside store hours, ask the user to choose a valid time within 9 AM – 8 PM.
     """,
     args_schema=BookAppointmentModel,
     return_direct=True,
@@ -711,33 +722,33 @@ def get_inventory_search(
     enable_fields: bool = False,
     context_limit: int = None,
 ):
-    """
-    Search the database for vehicle inventory information.
+    """Use this tool to search the database for available vehicle inventory.
 
-    The response will include the following attributes:
-    - Body
-    - Cylinders
-    - Doors
-    - DriveTrain
-    - Engine
-    - Exterior Color
-    - Fueltype
-    - Interior Color
-    - Fuel Type
-    - Miles
-    - Transmission
-    - Trim
-    - Year
+    Response Behavior:
+    - If 3 or fewer vehicles are returned, provide full specifications for each.
+    - If more than 3 vehicles are returned, provide a summarized overview highlighting key attributes such as exterior color, model, and interior color.
+      Example:
+      “We have a few vehicles available, such as a White Silverado 2500 with black interior. Would you like more details about any of these?”
 
-    If pricing information is available, it will include the MSRP (Manufacturer’s Suggested Retail Price).
-    If any discounts such as Dealer Discount, Customer Cash, or Total Savings are present, the response will
-    highlight the MSRP and indicate the final price after applying these discounts.
+    Important:
+    - The summarized overview does NOT include full vehicle attributes.
+    - If the user asks a follow-up question referring to one of the summarized vehicles (e.g., "Tell me more about the black Silverado"), you must call this tool again with narrowed criteria (e.g., exterior color, interior color, or model) to retrieve detailed specifications.
 
-    Context:
-    When using this tool, always REMEMBER to say: "Give me a few minutes to have a look at our inventory."
-    When describing the search results, avoid repeating the model name multiple times.
-    After initially mentioning the model, simply refer to it using natural phrases like "It offers...",
-    "This model comes with...", or "You'll get..." to keep the conversation flowing and avoid sounding robotic.
+    Attributes (if available):
+    - Model, Trim, Year
+    - Exterior Color, Interior Color
+    - Engine, Drivetrain, Cylinders, Transmission
+    - Doors, Body Type, Miles, Fuel Type
+    - Pricing (MSRP, Dealer Discount, Customer Cash)
+
+    Pricing Note:
+    When applicable, show MSRP and discount breakdown:
+    “The MSRP is $47,000. After applying a dealer discount and customer cash, the final price is $43,500.”
+
+    Conversational Guidelines:
+    - Always start with: “Give me a few minutes to have a look at our inventory.”
+    - Mention the model name only once. For subsequent references, use natural phrasing like:
+      “It offers...”, “This model comes with...”, or “You'll get...”
     """
 
     def build_facet_filter(key: str, value: str | int | List[int]) -> List[str]:
@@ -909,34 +920,34 @@ def get_inventory_search(
 get_inventory_search_schema = StructuredTool.from_function(
     func=get_inventory_search,
     name="get_inventory_search",
-    description="""Search the database for vehicle inventory information.
-                    
-                    The response will include the following attributes:
-                    - Body
-                    - Cylinders
-                    - Doors
-                    - DriveTrain
-                    - Engine
-                    - Exterior Color
-                    - Fueltype
-                    - Interior Color
-                    - Fuel Type
-                    - Miles
-                    - Transmission
-                    - Trim
-                    - Year
-                    
-                    If pricing information is available, it will include the MSRP (Manufacturer’s Suggested Retail Price).
-                    If any discounts such as Dealer Discount, Customer Cash, or Total Savings are present, the response will
-                    highlight the MSRP and indicate the final price after applying these discounts.
-                    eg: The MSRP for this vehicle is $47,000. After applying a dealer discount and customer cash offer, the final price is $43,500.
-                    
-                    Context:
-                    When using this tool, always REMEMBER to say: "Give me a few minutes to have a look at our inventory."
-                    When describing the search results, avoid repeating the model name multiple times.
-                    After initially mentioning the model, simply refer to it using natural phrases like "It offers...", 
-                    "This model comes with...", or "You'll get..." to keep the conversation flowing and avoid sounding robotic.
-                    """,
+    description="""Use this tool to search the database for available vehicle inventory.
+                
+                Response Behavior:
+                - If 3 or fewer vehicles are returned, provide full specifications for each.
+                - If more than 3 vehicles are returned, provide a summarized overview highlighting key attributes such as exterior color, model, and interior color.
+                  Example:
+                  “We have a few vehicles available, such as a White Silverado 2500 with black interior. Would you like more details about any of these?”
+                
+                Important:
+                - The summarized overview does NOT include full vehicle attributes.
+                - If the user asks a follow-up question referring to one of the summarized vehicles (e.g., "Tell me more about the black Silverado"), you must call this tool again with narrowed criteria (e.g., exterior color, interior color, or model) to retrieve detailed specifications.
+                
+                Attributes (if available):
+                - Model, Trim, Year
+                - Exterior Color, Interior Color
+                - Engine, Drivetrain, Cylinders, Transmission
+                - Doors, Body Type, Miles, Fuel Type
+                - Pricing (MSRP, Dealer Discount, Customer Cash)
+                
+                Pricing Note:
+                When applicable, show MSRP and discount breakdown:
+                “The MSRP is $47,000. After applying a dealer discount and customer cash, the final price is $43,500.”
+                
+                Conversational Guidelines:
+                - Always start with: “Give me a few minutes to have a look at our inventory.”
+                - Mention the model name only once. For subsequent references, use natural phrasing like:
+                  “It offers...”, “This model comes with...”, or “You'll get...”
+                """,
     args_schema=InventorySearchModel,
     return_direct=True,
 )
@@ -945,6 +956,15 @@ get_inventory_search_schema = StructuredTool.from_function(
 def extract_vehicle_chunks_text(options: list) -> str:
     if not options:
         return "No vehicles available"
+
+    if len(options) > 3:
+        summaries = []
+        for vehicle in options[:3]:
+            summaries.append(
+                f"{vehicle.get('ext_color')} color {vehicle.get("year")} {vehicle.get('trim')} with {vehicle.get('int_color')} interior"
+            )
+        summary_text = ", ".join(summaries)
+        return f"We have a few vehicles available, such as {summary_text}. Would you like to know more details about any of these cars?"
 
     chunks = []
 
@@ -985,9 +1005,6 @@ def extract_vehicle_chunks_text(options: list) -> str:
             continue
 
     return "\n\n".join(chunks[:10])
-
-
-
 
 # ---------------------------
 # Exported Tools

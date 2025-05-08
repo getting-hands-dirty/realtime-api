@@ -746,7 +746,7 @@ def get_inventory_search(
     “The MSRP is $47,000. After applying a dealer discount and customer cash, the final price is $43,500.”
 
     Conversational Guidelines:
-    - Always start with: “Give me a few minutes to have a look at our inventory.”
+    - Always start with: “Give me a few seconds to have a look at our inventory.”
     - Mention the model name only once. For subsequent references, use natural phrasing like:
       “It offers...”, “This model comes with...”, or “You'll get...”
     """
@@ -944,7 +944,7 @@ get_inventory_search_schema = StructuredTool.from_function(
                 “The MSRP is $47,000. After applying a dealer discount and customer cash, the final price is $43,500.”
                 
                 Conversational Guidelines:
-                - Always start with: “Give me a few minutes to have a look at our inventory.”
+                - Always start with: “Give me a few seconds to have a look at our inventory.”
                 - Mention the model name only once. For subsequent references, use natural phrasing like:
                   “It offers...”, “This model comes with...”, or “You'll get...”
                 """,

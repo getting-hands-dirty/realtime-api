@@ -124,7 +124,7 @@ def book_appointment(
         "vehicle_details": vehicle_details,
         "date": date,
         "time": time,
-        "service": "test drive",
+        "service": service,
     }
     response = requests.post(url, json=payload, headers=headers)
     return response.text
@@ -171,8 +171,8 @@ def get_appointment_details(
     enable_fields: bool = False,  # Not used
     context_limit: int = None,  # Not used
 ):
-    """
-    Query the knowledge base for questions about the booked appointment.
+    """"Query the knowledge base strictly for questions related to appointments that were already booked over the phone.
+        Do not use this for vehicle service status check related queries or new booking inquiries.
     """
     url = f"{BASE_URL}/vector-info"
     headers = {"Content-Type": "application/json"}
@@ -198,7 +198,9 @@ def get_appointment_details(
 get_appointment_details_schema = StructuredTool.from_function(
     func=get_appointment_details,
     name="get_appointment_details",
-    description="Query the knowledge base for questions about the booked appointment.",
+    description=""""Query the knowledge base strictly for questions related to appointments that were already booked over the phone.
+                    Do not use this for vehicle service status check related queries or new booking inquiries.
+                """,
     args_schema=AppointmentDetails,
     return_direct=True,
 )

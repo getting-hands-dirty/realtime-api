@@ -57,8 +57,6 @@ def capture_contact_details(
 
                     4. ONLY AFTER the customer confirms, invoke this tool with the captured name and phone number.
 
-                    5. Once the tool is invoked, say: “Great, let me take a quick note of that information.
-
     """
 
     url = f"{BASE_URL}/save-contact"
@@ -87,8 +85,6 @@ capture_contact_details_schema = StructuredTool.from_function(
                     3. Wait for the customer to explicitly confirm.
                     
                     4. ONLY AFTER the customer confirms, invoke this tool with the captured name and phone number.
-                    
-                    5. Once the tool is invoked, say: “Great, let me take a quick note of that information.
                 """,
     args_schema=ContactDetailsModel,
     return_direct=True,
@@ -728,27 +724,30 @@ def get_inventory_search(
     - If 3 or fewer vehicles are returned, provide full specifications for each.
     - If more than 3 vehicles are returned, provide a summarized overview highlighting key attributes such as exterior color, model, and interior color.
       Example:
-      “We have a few vehicles available, such as a White Silverado 2500 with black interior. Would you like more details about any of these?”
-
+      “We have a few vehicles available, such as a White Silverado 1500 with black interior. Would you like more details about any of these?”
+    
     Important:
     - The summarized overview does NOT include full vehicle attributes.
     - If the user asks a follow-up question referring to one of the summarized vehicles (e.g., "Tell me more about the black Silverado"), you must call this tool again with narrowed criteria (e.g., exterior color, interior color, or model) to retrieve detailed specifications.
-
+    
     Attributes (if available):
     - Model, Trim, Year
     - Exterior Color, Interior Color
     - Engine, Drivetrain, Cylinders, Transmission
     - Doors, Body Type, Miles, Fuel Type
     - Pricing (MSRP, Dealer Discount, Customer Cash)
-
+    
     Pricing Note:
+    If only the MSRP is available you may handle as below: 
+    "There may be additional incentives available. Would you prefer to schedule an appointment or have a Vehicle Specialist contact you?"
     When applicable, show MSRP and discount breakdown:
     “The MSRP is $47,000. After applying a dealer discount and customer cash, the final price is $43,500.”
-
+    
     Conversational Guidelines:
     - Always start with: “Give me a few seconds to have a look at our inventory.”
     - Mention the model name only once. For subsequent references, use natural phrasing like:
       “It offers...”, “This model comes with...”, or “You'll get...”
+    - After providing inventory options: “Would you like more details about any of these?”
     """
 
     def build_facet_filter(key: str, value: str | int | List[int]) -> List[str]:

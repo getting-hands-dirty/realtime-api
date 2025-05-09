@@ -926,7 +926,7 @@ get_inventory_search_schema = StructuredTool.from_function(
                 - If 3 or fewer vehicles are returned, provide full specifications for each.
                 - If more than 3 vehicles are returned, provide a summarized overview highlighting key attributes such as exterior color, model, and interior color.
                   Example:
-                  “We have a few vehicles available, such as a White Silverado 2500 with black interior. Would you like more details about any of these?”
+                  “We have a few vehicles available, such as a White Silverado 1500 with black interior. Would you like more details about any of these?”
                 
                 Important:
                 - The summarized overview does NOT include full vehicle attributes.
@@ -940,6 +940,8 @@ get_inventory_search_schema = StructuredTool.from_function(
                 - Pricing (MSRP, Dealer Discount, Customer Cash)
                 
                 Pricing Note:
+                If only the MSRP is available you may handle as below: 
+                "There may be additional incentives available. Would you prefer to schedule an appointment or have a Vehicle Specialist contact you?"
                 When applicable, show MSRP and discount breakdown:
                 “The MSRP is $47,000. After applying a dealer discount and customer cash, the final price is $43,500.”
                 
@@ -947,6 +949,7 @@ get_inventory_search_schema = StructuredTool.from_function(
                 - Always start with: “Give me a few seconds to have a look at our inventory.”
                 - Mention the model name only once. For subsequent references, use natural phrasing like:
                   “It offers...”, “This model comes with...”, or “You'll get...”
+                - After providing inventory options: “Would you like more details about any of these?”
                 """,
     args_schema=InventorySearchModel,
     return_direct=True,

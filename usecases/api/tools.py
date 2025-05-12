@@ -743,7 +743,8 @@ def get_inventory_search(
                 1. Begin the conversation with:
                 “Give me just a moment while I take a look at what we have available for you.”
 
-                 If 3 or fewer vehicles are returned, provide a very brief details of the vehicles but highligh the pricing.
+                IF 3 or fewer vehicles are returned, provide a very brief summery of the vehicles but highlight the pricing.
+
                 When more than 3 vehicles are returned:
                 
                 2. Summarize up to **three** vehicles using only:
@@ -754,15 +755,8 @@ def get_inventory_search(
                 ➤ Use natural, descriptive phrasing instead of bullet points.  
                 ➤ Mention the model name only once per vehicle. For any follow-ups, use phrases like “this one,” “you’ll get,” or “it features.”
                 
-                3. Choose one of the summarized vehicles and provide **full specifications**, including:
-                - Model, Trim, Year
-                - Exterior and Interior Color
-                - Engine, Drivetrain, Cylinders, Transmission
-                - Doors, Body Type, Miles, Fuel Type
-                - Pricing
-                
                 4. When pricing is available:
-                - If discounts apply, state them clearly:
+                - If discounts apply, state them clearly with what sort of discounts are available:
                     “The MSRP is $47,000. After applying a dealer discount and customer cash the final price is $43,500. There may be additional incentives available. Would you prefer to schedule an appointment or have a Vehicle Specialist contact you?”
                 
                 5. Conclude by informing the customer that additional vehicles are available:
@@ -947,10 +941,11 @@ get_inventory_search_schema = StructuredTool.from_function(
     description="""Use this tool to search the database for available vehicle inventory.
  
             Response Behavior:
-                1. Begin the conversation with:
+                              1. Begin the conversation with:
                 “Give me just a moment while I take a look at what we have available for you.”
 
-                 If 3 or fewer vehicles are returned, provide a very brief details of the vehicles but highligh the pricing.
+                IF 3 or fewer vehicles are returned, provide a very brief summery of the vehicles but highlight the pricing.
+
                 When more than 3 vehicles are returned:
                 
                 2. Summarize up to **three** vehicles using only:
@@ -961,15 +956,8 @@ get_inventory_search_schema = StructuredTool.from_function(
                 ➤ Use natural, descriptive phrasing instead of bullet points.  
                 ➤ Mention the model name only once per vehicle. For any follow-ups, use phrases like “this one,” “you’ll get,” or “it features.”
                 
-                3. Choose one of the summarized vehicles and provide **full specifications**, including:
-                - Model, Trim, Year
-                - Exterior and Interior Color
-                - Engine, Drivetrain, Cylinders, Transmission
-                - Doors, Body Type, Miles, Fuel Type
-                - Pricing
-                
                 4. When pricing is available:
-                - If discounts apply, state them clearly:
+                - If discounts apply, state them clearly with what sort of discounts are available:
                     “The MSRP is $47,000. After applying a dealer discount and customer cash the final price is $43,500. There may be additional incentives available. Would you prefer to schedule an appointment or have a Vehicle Specialist contact you?”
                 
                 5. Conclude by informing the customer that additional vehicles are available:

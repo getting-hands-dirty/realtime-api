@@ -721,37 +721,35 @@ def get_inventory_search(
     context_limit: int = None,
 ):
     """Use this tool to search the database for available vehicle inventory.
-                
-                Important Response Behavior:
-                - Always start with: “Give me a few minutes to have a look at our inventory.”
-                - If 3 or fewer vehicles are returned, provide full specifications for each.
-                - If more than 3 vehicles are returned, provide a summarized overview with only key highlights (model, exterior color, interior color).
-                  - Do not list full specifications in summaries.
-                  - If the user follows up on a summarized vehicle, call this tool again using narrowed criteria (e.g., model, exterior color) to provide full details.
-                
-                Attributes (if available):
-                - Model, Trim, Year
-                - Exterior Color, Interior Color
-                - Engine, Drivetrain, Cylinders, Transmission
-                - Doors, Body Type, Miles, Fuel Type
-                - Pricing: MSRP, Dealer Discount, Customer Cash
-                
-                Pricing Guidelines (Always Apply If Data Is Present):
-                - Clearly state the MSRP.
-                - Always mention applicable discounts: dealer discount, customer cash, or other incentives.
-                - Then highlight the final price after discounts.
-                - Use engaging, persuasive phrasing to emphasize value.  
-                  Example:  
-                  “The MSRP is $47,000. With a dealer discount of $2,000 and $1,500 in customer cash, your final price drops to just $43,500 — a fantastic deal for what this model offers!”
-                
-                Conversational Guidelines:
-                - Mention the model name only once when discussing a vehicle. In later references, use phrases like:
-                  - “It offers…”
-                  - “This model comes with…”
-                  - “You’ll enjoy…”
-                
-                Tone:  
-                - Keep it conversational, informative, and sales-oriented. Aim to build excitement and help the customer feel confident in their choice.
+
+        Response Behavior:
+        - If 3 or fewer vehicles are returned, provide full specifications for each.
+        - If more than 3 vehicles are returned, provide a summarized overview highlighting key attributes such as exterior color, model, and interior color.
+        Example:
+        “We have a few vehicles available, such as a White Silverado 1500 with black interior. Would you like more details about any of these?”
+        
+        Important:
+        - The summarized overview does NOT include full vehicle attributes.
+        - If the user asks a follow-up question referring to one of the summarized vehicles (e.g., "Tell me more about the black Silverado"), you must call this tool again with narrowed criteria (e.g., exterior color, interior color, or model) to retrieve detailed specifications.
+        
+        Attributes (if available):
+        - Model, Trim, Year
+        - Exterior Color, Interior Color
+        - Engine, Drivetrain, Cylinders, Transmission
+        - Doors, Body Type, Miles, Fuel Type
+        - Pricing (MSRP, Dealer Discount, Customer Cash)
+        
+        Pricing Note:
+        If only the MSRP is available you may handle as below: 
+        "There may be additional incentives available. Would you prefer to schedule an appointment or have a Vehicle Specialist contact you?"
+        When applicable, show MSRP and discount breakdown:
+        “The MSRP is $47,000. After applying a dealer discount and customer cash, the final price is $43,500.”
+        
+        Conversational Guidelines:
+        - Always start with: “Give me a few seconds to have a look at our inventory.”
+        - Mention the model name only once. For subsequent references, use natural phrasing like:
+        “It offers...”, “This model comes with...”, or “You'll get...”
+        - After providing inventory options: “Would you like more details about any of these?”
     """
 
     def build_facet_filter(key: str, value: str | int | List[int]) -> List[str]:
@@ -924,37 +922,35 @@ get_inventory_search_schema = StructuredTool.from_function(
     func=get_inventory_search,
     name="get_inventory_search",
     description="""Use this tool to search the database for available vehicle inventory.
-                
-                Important Response Behavior:
-                - Always start with: “Give me a few minutes to have a look at our inventory.”
+
+                Response Behavior:
                 - If 3 or fewer vehicles are returned, provide full specifications for each.
-                - If more than 3 vehicles are returned, provide a summarized overview with only key highlights (model, exterior color, interior color).
-                  - Do not list full specifications in summaries.
-                  - If the user follows up on a summarized vehicle, call this tool again using narrowed criteria (e.g., model, exterior color) to provide full details.
+                - If more than 3 vehicles are returned, provide a summarized overview highlighting key attributes such as exterior color, model, and interior color.
+                Example:
+                “We have a few vehicles available, such as a White Silverado 1500 with black interior. Would you like more details about any of these?”
+                
+                Important:
+                - The summarized overview does NOT include full vehicle attributes.
+                - If the user asks a follow-up question referring to one of the summarized vehicles (e.g., "Tell me more about the black Silverado"), you must call this tool again with narrowed criteria (e.g., exterior color, interior color, or model) to retrieve detailed specifications.
                 
                 Attributes (if available):
                 - Model, Trim, Year
                 - Exterior Color, Interior Color
                 - Engine, Drivetrain, Cylinders, Transmission
                 - Doors, Body Type, Miles, Fuel Type
-                - Pricing: MSRP, Dealer Discount, Customer Cash
+                - Pricing (MSRP, Dealer Discount, Customer Cash)
                 
-                Pricing Guidelines (Always Apply If Data Is Present):
-                - Clearly state the MSRP.
-                - Always mention applicable discounts: dealer discount, customer cash, or other incentives.
-                - Then highlight the final price after discounts.
-                - Use engaging, persuasive phrasing to emphasize value.  
-                  Example:  
-                  “The MSRP is $47,000. With a dealer discount of $2,000 and $1,500 in customer cash, your final price drops to just $43,500 — a fantastic deal for what this model offers!”
+                Pricing Note:
+                If only the MSRP is available you may handle as below: 
+                "There may be additional incentives available. Would you prefer to schedule an appointment or have a Vehicle Specialist contact you?"
+                When applicable, show MSRP and discount breakdown:
+                “The MSRP is $47,000. After applying a dealer discount and customer cash, the final price is $43,500.”
                 
                 Conversational Guidelines:
-                - Mention the model name only once when discussing a vehicle. In later references, use phrases like:
-                  - “It offers…”
-                  - “This model comes with…”
-                  - “You’ll enjoy…”
-                
-                Tone:  
-                - Keep it conversational, informative, and sales-oriented. Aim to build excitement and help the customer feel confident in their choice.
+                - Always start with: “Give me a few seconds to have a look at our inventory.”
+                - Mention the model name only once. For subsequent references, use natural phrasing like:
+                “It offers...”, “This model comes with...”, or “You'll get...”
+                - After providing inventory options: “Would you like more details about any of these?”
                 """,
     args_schema=InventorySearchModel,
     return_direct=True,

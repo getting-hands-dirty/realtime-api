@@ -497,6 +497,8 @@ async def handle_media_stream(websocket: WebSocket):
     except Exception as e:
         print(f"Unexpected error in media stream: {e}")
     finally:
+        if openai_ws and openai_ws.open:
+            await openai_ws.close()
         await websocket.close()
 
 

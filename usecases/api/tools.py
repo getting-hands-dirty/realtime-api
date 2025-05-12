@@ -113,9 +113,21 @@ def book_appointment(
     context_limit: int = None,  # Not used
 ):
     """
-    Book an appointment for a vehicle test drive or visit the store.
-    It is a must that you request for Customer Name, Vehicle Details, Date, Time, and Service.
-    These details should be gathered from the user before invoking this tool.
+    Book an appointment for a vehicle test drive or store visit.
+
+    Before invoking this tool, collect the following mandatory details from the user:
+    • Customer Name
+    • Vehicle Details
+    • Date
+    • Time (must be strictly between 9:00 AM and 8:00 PM)
+    • Service Type
+
+    Important:
+    - Do NOT proceed if the time is outside 9:00 AM to 8:00 PM.
+    - If the user provides an invalid time, respond with:
+    "Our store hours are between 9:00 AM and 8:00 PM. Please provide a time within this range."
+
+    This validation is mandatory and must be enforced before invoking the tool.
     """
     url = f"{BASE_URL}/book-appointment"
     headers = {"Content-Type": "application/json"}
@@ -133,17 +145,22 @@ def book_appointment(
 book_appointment_schema = StructuredTool.from_function(
     func=book_appointment,
     name="book_appointment",
-    description="""
-    Book an appointment for a vehicle test drive or store visit.
-    Before invoking, collect the following from the user:
-    • Customer Name
-    • Vehicle Details
-    • Date
-    • Time (must be between 9:00 AM and 8:00 PM)
-    • Service Type
-    
-    If the provided time is outside store hours, ask the user to choose a valid time within 9 AM – 8 PM.
-    """,
+    description="""Book an appointment for a vehicle test drive or store visit.
+
+                Before invoking this tool, collect the following mandatory details from the user:
+                • Customer Name
+                • Vehicle Details
+                • Date
+                • Time (must be strictly between 9:00 AM and 8:00 PM)
+                • Service Type
+
+                Important:
+                - Do NOT proceed if the time is outside 9:00 AM to 8:00 PM.
+                - If the user provides an invalid time, respond with:
+                "Our store hours are between 9:00 AM and 8:00 PM. Please provide a time within this range."
+
+                This validation is mandatory and must be enforced before invoking the tool.
+                """,
     args_schema=BookAppointmentModel,
     return_direct=True,
 )

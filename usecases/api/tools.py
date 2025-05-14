@@ -743,7 +743,8 @@ def get_inventory_search(
 
                 1. **Before triggering the tool**, always say exactly:
                    **“Give me a second. Let me check that”**
-                   🔒 Do not add anything else. Do not repeat the vehicle name here — trust that context is already established.
+                   🔒 Do not add anything else. Do NOT repeat the VEHICLE MODEL here — trust that context is already established.
+                   🔒 AFTER GETTING THE INVETORY DETAILS DO NOT REPEAT THE VEHICLE MODEL. IF NEEDED A PART OF THE VEHICLE MODEL COULD BE USED. For example instead of saying "New 2025 Chevrolet Blazer RS" you could say "Blazer RS". 
 
                 2. If 3 or fewer vehicles are returned, provide a very brief summary of each vehicle and highlight the pricing.
 
@@ -939,7 +940,8 @@ get_inventory_search_schema = StructuredTool.from_function(
                 
                 1. **Before triggering the tool**, always say exactly:  
                    **“Give me a second. Let me check that for you”**  
-                   🔒 Do not add anything else. Do not repeat the vehicle name here — trust that context is already established.
+                   🔒 Do not add anything else. Do NOT repeat the VEHICLE MODEL here — trust that context is already established.
+                   🔒 AFTER GETTING THE INVETORY DETAILS DO NOT REPEAT THE VEHICLE MODEL. IF NEEDED A PART OF THE VEHICLE MODEL COULD BE USED. For example instead of saying "New 2025 Chevrolet Blazer RS" you could say "Blazer RS". 
                 
                 2. If 3 or fewer vehicles are returned, provide a very brief summary of each vehicle and highlight the pricing.
                 
@@ -1375,7 +1377,8 @@ def get_vehicle_prices(
 
     1. **Before triggering the tool**, always say exactly:
        **“Give me a second. Let me check that for you”**
-       🔒 Do not add anything else. Do not mention the vehicle name again here. Keep it short and consistent.
+       🔒 Do not add anything else. Do NOT repeat the VEHICLE MODEL here — trust that context is already established.
+       🔒 IF NEEDED A PART OF THE VEHICLE MODEL COULD BE USED. For example instead of saying "New 2025 Chevrolet Blazer RS" you could say "Blazer RS". 
 
     2. Filter based on make, model, trim, year, or color to find a close match.
 
@@ -1473,7 +1476,8 @@ get_vehicle_prices_schema = StructuredTool.from_function(
                 
                 1. **Before triggering the tool**, always say exactly:
                    **“Give me a second. Let me check that for you”**  
-                   🔒 Do not add anything else. Do not mention the vehicle name again here. Keep it short and consistent.
+                   🔒 Do not add anything else. Do NOT repeat the VEHICLE MODEL here — trust that context is already established.
+                   🔒 IF NEEDED A PART OF THE VEHICLE MODEL COULD BE USED. For example instead of saying "New 2025 Chevrolet Blazer RS" you could say "Blazer RS". 
                 
                 2. Filter based on make, model, trim, year, or color to find a close match.
                 

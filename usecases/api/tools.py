@@ -1399,9 +1399,6 @@ def get_vehicle_prices(
 
     6. If no vehicles are found:
        - Say: “No vehicles found matching your pricing request.”
-
-    7. Wrap up with a helpful line:
-       “Want me to find you similar options or check what other trims are available?”
         """
 
     def build_facet_filter(key: str, value: str | int) -> List[str]:
@@ -1498,9 +1495,6 @@ get_vehicle_prices_schema = StructuredTool.from_function(
                 
                 6. If no vehicles are found:
                    - Say: “No vehicles found matching your pricing request.”
-                
-                7. Wrap up with a helpful line:
-                   “Want me to find you similar options or check what other trims are available?”
                     """,
     args_schema=InventoryPriceQueryModel,
     return_direct=True,
@@ -1534,7 +1528,6 @@ def extract_vehicle_prices_text(vehicles: list) -> str:
     else:
         summaries.append("While this vehicle doesn’t currently show any listed discounts, you might still be eligible for exclusive incentives and rebates. Would you like me to connect you with a sales expert to explore your options?")
 
-    summaries.append("\nWant me to find you similar options or check what other trims are available?")
     return "\n".join(summaries)
 
 

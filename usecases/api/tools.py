@@ -739,29 +739,31 @@ def get_inventory_search(
 ):
     """Use this tool to search the database for available vehicle inventory.
 
-                Response Behavior:
-                1. Begin the conversation with:
-                   “Give me just a moment while I take a look at what we have available for you.”
+                ➤ Response Behavior:
 
-                2. If 3 or fewer vehicles are returned, provide a very brief summary of each vehicle but highlight the pricing.
+                1. **Before triggering the tool**, always say exactly:
+                   **“Give me a second. Let me check that”**
+                   🔒 Do not add anything else. Do not repeat the vehicle name here — trust that context is already established.
+
+                2. If 3 or fewer vehicles are returned, provide a very brief summary of each vehicle and highlight the pricing.
 
                 3. When more than 3 vehicles are returned:
-
                    - Summarize up to **three** vehicles using only:
                      - Exterior Color
                      - Model
                      - Interior Color
 
                    ➤ Use natural, descriptive phrasing instead of bullet points.
-                   ➤ Mention the model name only once per vehicle. For any follow-ups, use phrases like “this one,” “you’ll get,” or “it features.”
+                   ➤ Mention the model name **only once per vehicle**. For subsequent references, use phrases like:
+                     “this one,” “you’ll get,” or “it features.”
 
-                4. Do **not** include full specifications in the initial summary. Only provide detailed information for one specific vehicle **if the customer requests it**.
+                4. Do **not** include full specifications in the initial summary. Only provide detailed information for one specific vehicle **if the customer requests it.**
 
-                5. If returned is a summary of vehicles, conclude conversation stating, **choose one of the options you just mentioned in the summary** and provide full specifications for that specific vehicle.
+                5. If vehicles are summarized, conclude with:
+                   “Choose one of the options you just mentioned in the summary,” and provide full specifications for that specific vehicle.
 
-                7. Always maintain a warm, confident, and helpful tone. Avoid robotic or overly scripted responses. Use contractions and natural expressions. Speak as if you’re having a real conversation.
+                6. Always maintain a warm, confident, and helpful tone. Avoid robotic or overly scripted responses. Use contractions and natural expressions. Speak as if you’re having a real conversation.
     """
-
     def build_facet_filter(key: str, value: str | int | List[int]) -> List[str]:
         if isinstance(value, list):
             return [f"{key}:{v}" for v in value]
@@ -933,28 +935,30 @@ get_inventory_search_schema = StructuredTool.from_function(
     name="get_inventory_search",
     description="""Use this tool to search the database for available vehicle inventory.
 
-                Response Behavior:
-                1. Begin the conversation with:
-                   “Give me just a moment while I take a look at what we have available for you.”
+                ➤ Response Behavior:
                 
-                2. If 3 or fewer vehicles are returned, provide a very brief summary of each vehicle but highlight the pricing.
+                1. **Before triggering the tool**, always say exactly:  
+                   **“Give me a second. Let me check that for you”**  
+                   🔒 Do not add anything else. Do not repeat the vehicle name here — trust that context is already established.
+                
+                2. If 3 or fewer vehicles are returned, provide a very brief summary of each vehicle and highlight the pricing.
                 
                 3. When more than 3 vehicles are returned:
-                
                    - Summarize up to **three** vehicles using only:
-                     - Exterior Color
-                     - Model
-                     - Interior Color
+                     - Exterior Color  
+                     - Model  
+                     - Interior Color  
                 
                    ➤ Use natural, descriptive phrasing instead of bullet points.  
-                   ➤ Mention the model name only once per vehicle. For any follow-ups, use phrases like “this one,” “you’ll get,” or “it features.”
+                   ➤ Mention the model name **only once per vehicle**. For subsequent references, use phrases like:
+                     “this one,” “you’ll get,” or “it features.”
                 
-                4. Do **not** include full specifications in the initial summary. Only provide detailed information for one specific vehicle **if the customer requests it**.
+                4. Do **not** include full specifications in the initial summary. Only provide detailed information for one specific vehicle **if the customer requests it.**
                 
-                5. If returned is an summary of vehicles conclude conversation stating, **choose one of the options you just mentioned in the summary** and provide full specifications for that specific vehicle.
+                5. If vehicles are summarized, conclude with:
+                   “Choose one of the options you just mentioned in the summary,” and provide full specifications for that specific vehicle.
                 
-                7. Always maintain a warm, confident, and helpful tone. Avoid robotic or overly scripted responses. Use contractions and natural expressions. Speak as if you’re having a real conversation.
-
+                6. Always maintain a warm, confident, and helpful tone. Avoid robotic or overly scripted responses. Use contractions and natural expressions. Speak as if you’re having a real conversation.
     """,
     args_schema=InventorySearchModel,
     return_direct=True,
@@ -1368,30 +1372,34 @@ def get_vehicle_prices(
     """Use this tool when the customer **asks about the price or MSRP of a specific vehicle**.
 
     ➤ Response Behavior:
-    1. Start with:
-       “Give me just a second while I check the latest price on that for you.”
+
+    1. **Before triggering the tool**, always say exactly:
+       **“Give me a second. Let me check that for you”**
+       🔒 Do not add anything else. Do not mention the vehicle name again here. Keep it short and consistent.
 
     2. Filter based on make, model, trim, year, or color to find a close match.
 
     3. For each matching vehicle (up to 10):
-        - Always include the **MSRP** (original price).
-        - Clearly show the **final sale price** after applying all available discounts (e.g., dealer discount, customer cash).
-        - Example:
-          “The MSRP is $47,000. With current incentives and dealer discounts, you're looking at a final price of just $43,500. That's a fantastic deal!”
+       - Always include the **MSRP** (original price).
+       - Clearly show the **final sale price** after applying all available discounts (e.g., dealer discount, customer cash).
+       - Example:
+         “MSRP: $47,000 → Final Price: $43,500. You're saving big on this one!”
 
     4. Format each result like:
-        “Black — LT — MSRP: $47,000 → Final Price: $43,500”
+       “1. Black — LT — MSRP: $47,000 → Final Price: $43,500”
 
-    5. Use energetic and friendly phrasing to highlight value and savings.
-        - Avoid robotic tone. Use natural expressions like:
-          “You're saving big on this one,” or “This deal won’t last long!”
+    5. Use energetic, friendly, and natural phrasing to highlight value and savings:
+       - Say things like:
+         “You’re saving big on this one,”
+         “This deal won’t last long!”
+       - Avoid robotic tone and don’t repeat the vehicle name unnecessarily.
 
-    6. If no matching vehicles are found:
-        - Return: “No vehicles found matching your pricing request.”
+    6. If no vehicles are found:
+       - Say: “No vehicles found matching your pricing request.”
 
-    7. Wrap up by offering more help:
-        “Want me to find you similar options or check what other trims are available?”
-    """
+    7. Wrap up with a helpful line:
+       “Want me to find you similar options or check what other trims are available?”
+        """
 
     def build_facet_filter(key: str, value: str | int) -> List[str]:
         if isinstance(value, list):
@@ -1460,32 +1468,36 @@ get_vehicle_prices_schema = StructuredTool.from_function(
     func=get_vehicle_prices,
     name="get_vehicle_prices",
     description="""Use this tool when the customer **asks about the price or MSRP of a specific vehicle**.
-
-    ➤ Response Behavior:
-    1. Start with:
-       “Give me just a second while I check the latest price on that for you.”
-
-    2. Filter based on make, model, trim, year, or color to find a close match.
-
-    3. For each matching vehicle (up to 10):
-        - Always include the **MSRP** (original price).
-        - Clearly show the **final sale price** after applying all available discounts (e.g., dealer discount, customer cash).
-        - Example:
-          “The MSRP is $47,000. With current incentives and dealer discounts, you're looking at a final price of just $43,500. That's a fantastic deal!”
-
-    4. Format each result like:
-        “Black — LT — MSRP: $47,000 → Final Price: $43,500”
-
-    5. Use energetic and friendly phrasing to highlight value and savings.
-        - Avoid robotic tone. Use natural expressions like:
-          “You're saving big on this one,” or “This deal won’t last long!”
-
-    6. If no matching vehicles are found:
-        - Return: “No vehicles found matching your pricing request.”
-
-    7. Wrap up by offering more help:
-        “Want me to find you similar options or check what other trims are available?”
-    """,
+                
+                ➤ Response Behavior:
+                
+                1. **Before triggering the tool**, always say exactly:
+                   **“Give me a second. Let me check that for you”**  
+                   🔒 Do not add anything else. Do not mention the vehicle name again here. Keep it short and consistent.
+                
+                2. Filter based on make, model, trim, year, or color to find a close match.
+                
+                3. For each matching vehicle (up to 10):
+                   - Always include the **MSRP** (original price).
+                   - Clearly show the **final sale price** after applying all available discounts (e.g., dealer discount, customer cash).
+                   - Example:  
+                     “MSRP: $47,000 → Final Price: $43,500. You're saving big on this one!”
+                
+                4. Format each result like:  
+                   “1. Black — LT — MSRP: $47,000 → Final Price: $43,500”
+                
+                5. Use energetic, friendly, and natural phrasing to highlight value and savings:
+                   - Say things like:  
+                     “You’re saving big on this one,”  
+                     “This deal won’t last long!”  
+                   - Avoid robotic tone and don’t repeat the vehicle name unnecessarily.
+                
+                6. If no vehicles are found:
+                   - Say: “No vehicles found matching your pricing request.”
+                
+                7. Wrap up with a helpful line:
+                   “Want me to find you similar options or check what other trims are available?”
+                    """,
     args_schema=InventoryPriceQueryModel,
     return_direct=True,
 )

@@ -996,21 +996,21 @@ def extract_vehicle_chunks_text(options: list) -> str:
             ]
             price = extract_prices(vehicle.get("lightning")["advancedPricingStack"])
 
-            chunk = f"""Title: {vehicle.get("title_vrp")}
+            chunk = f"""Type: {vehicle.get("type")}
+                        Model: {vehicle.get("model")}
+                        Trim: {vehicle.get("trim")}
+                        Year: {vehicle.get("year")}
                         Body: {vehicle.get("body")}
+                        Miles: {vehicle.get("miles")}
                         Cylinders: {vehicle.get("cylinders")}
-                        Doors: {vehicle.get("doors")}
                         Drivetrain: {vehicle.get("drivetrain")}
+                        Doors: {vehicle.get("doors")}
                         Engine: {vehicle.get("engine_description")}
                         Exterior Color: {vehicle.get("ext_color")} ({vehicle.get("ext_color_generic")})
                         Fuel Type: {vehicle.get("fueltype")}
                         Interior Color: {vehicle.get("int_color")}
-                        Miles: {vehicle.get("miles")}
-                        Model: {vehicle.get("model")}
                         Transmission: {vehicle.get("transmission_description")}
-                        Trim: {vehicle.get("trim")}
-                        Type: {vehicle.get("type")}
-                        Year: {vehicle.get("year")}
+                        
                         Detailed price: {format_vehicle_price(price) if price else vehicle.get("our_price")}
                         """.strip()
 

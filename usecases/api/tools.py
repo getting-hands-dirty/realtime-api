@@ -1494,10 +1494,11 @@ def extract_vehicle_prices_text(vehicles: list) -> str:
     if not vehicles:
         return "No vehicles found matching your pricing request."
 
-    limited_vehicles = vehicles[:10]
+    limited_vehicles = vehicles[:3]
     count = len(limited_vehicles)
 
     summaries = [f"{count} vehicle(s) available:\n"]
+    discounts = False
 
     for i, vehicle in enumerate(limited_vehicles, start=1):
         try:
@@ -1506,10 +1507,16 @@ def extract_vehicle_prices_text(vehicles: list) -> str:
             price_data = extract_prices(vehicle.get("lightning", {}).get("advancedPricingStack", []))
             formatted_price = format_vehicle_price(price_data) if price_data else f"${vehicle.get('our_price', 'N/A')}"
 
+            discounts = True if formatted_price.startswith("MSRP:") else False
             summaries.append(f"{i}. {ext_color} — {trim} — {formatted_price}")
         except Exception as e:
             print(f"Error processing vehicle pricing: {e}")
             continue
+
+    if discounts:
+        summaries.append("Great news! These vehicles come with dealer and customer cash discounts, and you may be eligible for additional incentives. Would you like me to connect you with a sales expert to discuss this further?")
+    else:
+        summaries.append("While this vehicle doesn’t currently show any listed discounts, you might still be eligible for exclusive incentives and rebates. Would you like me to connect you with a sales expert to explore your options?")
 
     summaries.append("\nWant me to find you similar options or check what other trims are available?")
     return "\n".join(summaries)

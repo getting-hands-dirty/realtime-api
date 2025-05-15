@@ -1002,16 +1002,11 @@ def extract_vehicle_chunks_text(options: list) -> str:
                         Model: {vehicle.get("model")}
                         Trim: {vehicle.get("trim")}
                         Year: {vehicle.get("year")}
-                        Body: {vehicle.get("body")}
                         Miles: {vehicle.get("miles")}
-                        Cylinders: {vehicle.get("cylinders")}
                         Drivetrain: {vehicle.get("drivetrain")}
-                        Doors: {vehicle.get("doors")}
                         Engine: {vehicle.get("engine_description")}
                         Exterior Color: {vehicle.get("ext_color")} ({vehicle.get("ext_color_generic")})
-                        Fuel Type: {vehicle.get("fueltype")}
                         Interior Color: {vehicle.get("int_color")}
-                        Transmission: {vehicle.get("transmission_description")}
                         
                         """.strip()
 

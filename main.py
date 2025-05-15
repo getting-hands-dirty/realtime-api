@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.websockets import WebSocketDisconnect
+from starlette.websockets import WebSocketState
 from twilio.twiml.voice_response import Connect, VoiceResponse
 
 from config import REALTIME_AUDIO_API_URL
@@ -499,7 +500,8 @@ async def handle_media_stream(websocket: WebSocket):
     finally:
         if openai_ws and openai_ws.open:
             await openai_ws.close()
-        await websocket.close()
+        if websocket.application_state != WebSocketState.DISCONNECTED:
+            await websocket.close()
 
 
 def load_metadata(

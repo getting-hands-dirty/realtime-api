@@ -742,7 +742,7 @@ def get_inventory_search(
                 ➤ Response Behavior:
 
                 1. **Before triggering the tool**, always say exactly:
-                   **“Give me a second. Let me check that”**
+                   **“Give me a second. Let me check that for you”**
                    🔒 Do not add anything else. Do not repeat the vehicle name here — trust that context is already established.
 
                 2. If 3 or fewer vehicles are returned, provide a very brief summary of each vehicle and highlight the pricing.
@@ -938,7 +938,7 @@ get_inventory_search_schema = StructuredTool.from_function(
                 ➤ Response Behavior:
                 
                 1. **Before triggering the tool**, always say exactly:  
-                   **“Let me check that for you”**  
+                   **“Give me a second. Let me check that for you”**  
                    🔒 Do not add anything else. Do not repeat the vehicle name here — trust that context is already established.
                 
                 2. If 3 or fewer vehicles are returned, provide a very brief summary of each vehicle and highlight the pricing.
@@ -996,14 +996,11 @@ def extract_vehicle_chunks_text(options: list) -> str:
             ]
             price = extract_prices(vehicle.get("lightning")["advancedPricingStack"])
 
-            chunk = f"""Type: {vehicle.get("type")}
-                        Model: {vehicle.get("model")}
+            chunk = f"""Model: {vehicle.get("model")}
                         Trim: {vehicle.get("trim")}
                         Year: {vehicle.get("year")}
                         Miles: {vehicle.get("miles")}
-                        Drivetrain: {vehicle.get("drivetrain")}
-                        Engine: {vehicle.get("engine_description")}
-                        Exterior Color: {vehicle.get("ext_color")} ({vehicle.get("ext_color_generic")})
+                        Exterior Color: {vehicle.get("ext_color")}
                         Interior Color: {vehicle.get("int_color")}
                         
                         """.strip()
@@ -1368,7 +1365,7 @@ def get_vehicle_prices(
     ➤ Response Behavior:
 
     1. **Before triggering the tool**, always say exactly:
-       **“Let me check that for you”**
+       **“Give me a second...”**
        🔒 Do not add anything else. Do not mention the vehicle name again here. Keep it short and consistent.
 
     2. Filter based on make, model, trim, year, or color to find a close match.
@@ -1466,7 +1463,7 @@ get_vehicle_prices_schema = StructuredTool.from_function(
                 ➤ Response Behavior:
                 
                 1. **Before triggering the tool**, always say exactly:  
-                   **“Let me check that for you.”**  
+                   **“Give me a second...”**  
                    🔒 Do not add anything else. **Do NOT repeat the vehicle name** here. Keep it short and consistent.
                 
                 2. Filter based on make, model, trim, year, or color to find a close match.

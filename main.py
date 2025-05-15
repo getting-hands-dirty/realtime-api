@@ -36,6 +36,7 @@ LOG_EVENT_TYPES = [
     "input_audio_buffer.speech_stopped",
     "input_audio_buffer.speech_started",
     "session.created",
+    "session.done",
     "response.function_call_arguments.done",
     "conversation.item.created",
     "response.audio_transcript.done",

@@ -1505,20 +1505,19 @@ def extract_vehicle_prices_text(vehicles: list) -> str:
 
     limited_vehicles = vehicles[:3]
     count = len(limited_vehicles)
+    multiple_vehicle_text = 'with the number of vehicles available \'Here are a few of the available options.\''
+    one_vehicle_text = 'The following is the price for the vehicle you requested.'
 
-    summaries = [f"{count} vehicle(s) available:\n"]
+    summaries = [f"Read exactly the following {one_vehicle_text if count == 1 else multiple_vehicle_text} It is essential to mention any available discounts, if applicable.\n\n There are {count} vehicle(s) available:"]
     discounts = False
 
     for i, vehicle in enumerate(limited_vehicles, start=1):
         try:
-            summaries.append("When generating only say the following. Do not repeat the model name and only state the trim as in the following details. It is essential to mention any available discounts, if applicable.\n")
-            ext_color = vehicle.get("ext_color", "Unknown Color")
-            trim = vehicle.get("trim", "Unknown Trim")
             price_data = extract_prices(vehicle.get("lightning", {}).get("advancedPricingStack", []))
             formatted_price = format_vehicle_price(price_data) if price_data else f"${vehicle.get('our_price', 'N/A')}"
 
             discounts = True if formatted_price.startswith("MSRP:") else False
-            summaries.append(f"{i}. {ext_color} — {trim} — {formatted_price}")
+            summaries.append(f"{i}. {formatted_price}")
         except Exception as e:
             print(f"Error processing vehicle pricing: {e}")
             continue

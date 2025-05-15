@@ -1013,7 +1013,6 @@ def extract_vehicle_chunks_text(options: list) -> str:
                         Interior Color: {vehicle.get("int_color")}
                         Transmission: {vehicle.get("transmission_description")}
                         
-                        Detailed price: {format_vehicle_price(price) if price else vehicle.get("our_price")}
                         """.strip()
 
             chunks.append(chunk)

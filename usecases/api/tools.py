@@ -743,8 +743,7 @@ def get_inventory_search(
 
                 1. **Before triggering the tool**, always say exactly:
                    **“Give me a second. Let me check that”**
-                   🔒 Do not add anything else. Do NOT repeat the VEHICLE MODEL here — trust that context is already established.
-                   🔒 AFTER GETTING THE INVETORY DETAILS DO NOT REPEAT THE VEHICLE MODEL. IF NEEDED A PART OF THE VEHICLE MODEL COULD BE USED. For example instead of saying "New 2025 Chevrolet Blazer RS" you could say "Blazer RS". 
+                   🔒 Do not add anything else. Do not repeat the vehicle name here — trust that context is already established.
 
                 2. If 3 or fewer vehicles are returned, provide a very brief summary of each vehicle and highlight the pricing.
 
@@ -939,9 +938,8 @@ get_inventory_search_schema = StructuredTool.from_function(
                 ➤ Response Behavior:
                 
                 1. **Before triggering the tool**, always say exactly:  
-                   **“Give me a second. Let me check that for you”**  
-                   🔒 Do not add anything else. Do NOT repeat the VEHICLE MODEL here — trust that context is already established.
-                   🔒 AFTER GETTING THE INVETORY DETAILS DO NOT REPEAT THE VEHICLE MODEL. IF NEEDED A PART OF THE VEHICLE MODEL COULD BE USED. For example instead of saying "New 2025 Chevrolet Blazer RS" you could say "Blazer RS". 
+                   **“Let me check that for you”**  
+                   🔒 Do not add anything else. Do not repeat the vehicle name here — trust that context is already established.
                 
                 2. If 3 or fewer vehicles are returned, provide a very brief summary of each vehicle and highlight the pricing.
                 
@@ -1370,9 +1368,8 @@ def get_vehicle_prices(
     ➤ Response Behavior:
 
     1. **Before triggering the tool**, always say exactly:
-       **“Give me a second. Let me check that for you”**
-       🔒 Do not add anything else. Do NOT repeat the VEHICLE MODEL here — trust that context is already established.
-       🔒 IF NEEDED A PART OF THE VEHICLE MODEL COULD BE USED. For example instead of saying "New 2025 Chevrolet Blazer RS" you could say "Blazer RS". 
+       **“Let me check that for you”**
+       🔒 Do not add anything else. Do not mention the vehicle name again here. Keep it short and consistent.
 
     2. Filter based on make, model, trim, year, or color to find a close match.
 
@@ -1393,6 +1390,9 @@ def get_vehicle_prices(
 
     6. If no vehicles are found:
        - Say: “No vehicles found matching your pricing request.”
+
+    7. Wrap up with a helpful line:
+       “Want me to find you similar options or check what other trims are available?”
         """
 
     def build_facet_filter(key: str, value: str | int) -> List[str]:
@@ -1465,31 +1465,39 @@ get_vehicle_prices_schema = StructuredTool.from_function(
                 
                 ➤ Response Behavior:
                 
-                1. **Before triggering the tool**, always say exactly:
-                   **“Give me a second. Let me check that for you”**  
-                   🔒 Do not add anything else. Do NOT repeat the VEHICLE MODEL here — trust that context is already established.
-                   🔒 IF NEEDED A PART OF THE VEHICLE MODEL COULD BE USED. For example instead of saying "New 2025 Chevrolet Blazer RS" you could say "Blazer RS". 
+                1. **Before triggering the tool**, always say exactly:  
+                   **“Let me check that for you.”**  
+                   🔒 Do not add anything else. **Do NOT repeat the vehicle name** here. Keep it short and consistent.
                 
                 2. Filter based on make, model, trim, year, or color to find a close match.
                 
-                3. For each matching vehicle (up to 10):
-                   - Always include the **MSRP** (original price).
-                   - Clearly show the **final sale price** after applying all available discounts (e.g., dealer discount, customer cash).
+                3. **Important Model Name Rule**:  
+                   - Once this tool is used, assume the model is now established in the conversation.  
+                   - **Do NOT repeat the vehicle model name** when presenting prices or in any follow-up answers.  
+                   - Use natural phrasing like:  
+                     – “It starts around...”  
+                     – “This one has...”  
+                     – “You’ll get...”  
+                
+                4. For each matching vehicle (up to 10):  
+                   - Do NOT mention the model name again in each result.  
+                   - Always include the **MSRP** (original price).  
+                   - Clearly show the **final sale price** after all applicable discounts (e.g., dealer discount, customer cash).  
                    - Example:  
-                     “MSRP: $47,000 → Final Price: $43,500. You're saving big on this one!”
+                     **“MSRP: $47,000 → Final Price: $43,500. You’re saving big on this one!”**
                 
-                4. Format each result like:  
-                   “1. Black — LT — MSRP: $47,000 → Final Price: $43,500”
+                5. Format each result like:  
+                   **“1. Black — LT — MSRP: $47,000 → Final Price: $43,500”**
                 
-                5. Use energetic, friendly, and natural phrasing to highlight value and savings:
-                   - Say things like:  
-                     “You’re saving big on this one,”  
-                     “This deal won’t last long!”  
-                   - Avoid robotic tone and don’t repeat the vehicle name unnecessarily.
+                6. Use energetic, conversational phrasing to emphasize value:  
+                   – “You’re saving big on this one.”  
+                   – “This deal won’t last long!”  
+                   – “Incredible value for the features it offers.”  
+                   🔕 Avoid robotic tone or repeating the vehicle name.
                 
-                6. If no vehicles are found:
-                   - Say: “No vehicles found matching your pricing request.”
-                    """,
+                7. If no vehicles are found:  
+                   **Say:** “No vehicles found matching your pricing request.”
+                """,
     args_schema=InventoryPriceQueryModel,
     return_direct=True,
 )
@@ -1506,6 +1514,7 @@ def extract_vehicle_prices_text(vehicles: list) -> str:
 
     for i, vehicle in enumerate(limited_vehicles, start=1):
         try:
+            summaries.append("When generating only say the following. Do not repeat the model name and only state the trim as in the following details. It is essential to mention any available discounts, if applicable.\n")
             ext_color = vehicle.get("ext_color", "Unknown Color")
             trim = vehicle.get("trim", "Unknown Trim")
             price_data = extract_prices(vehicle.get("lightning", {}).get("advancedPricingStack", []))
@@ -1518,10 +1527,9 @@ def extract_vehicle_prices_text(vehicles: list) -> str:
             continue
 
     if discounts:
-        summaries.append("Great news! These vehicles come with dealer and customer cash discounts, and you may be eligible for additional incentives. Would you like me to connect you with a sales expert to discuss this further?")
+        summaries.append("These vehicles come with dealer and customer cash discounts, and you may be eligible for additional incentives. Would you like me to connect you with a sales expert to discuss this further?")
     else:
         summaries.append("While this vehicle doesn’t currently show any listed discounts, you might still be eligible for exclusive incentives and rebates. Would you like me to connect you with a sales expert to explore your options?")
-
     return "\n".join(summaries)
 
 
